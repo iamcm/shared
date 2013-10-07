@@ -317,7 +317,7 @@ class EntityManager:
                     matched_content = compiledre.sub(' ', result[field])
 
                     for _word in matched_content.split(' '):
-                        if term in _word:
+                        if term.lower() in _word.lower():
                             try:
                                 matches[str(result['_id']) +':'+ _word]['count'] += 1
                             except:
