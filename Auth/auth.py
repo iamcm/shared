@@ -177,6 +177,16 @@ class AuthService:
             return session
 
 
+    def create_user(self, email, password, valid=True):
+        u = User()
+        u.email = email
+        u.salt = ''.join(random.sample(string.letters, 15))
+        u.password = self.encrypt_password(password, u.salt)
+        u.valid = valid
+
+        self.em.save('User', u)
+
+
 
 import bottle
 
