@@ -133,30 +133,42 @@ class EntityManager:
                 #get the value from the data for this property
                 propvalue = getattr(entity, prop)
 
-            
-                if proptype == list:
-                    items = []
+                obj[prop] = self._sanitise_object(proptype, propvalue)
 
-                    for item in propvalue:
-                        #if the items in this list are entities then convert them to an object as well
-                        if hasattr(item, '_presave'):
-                            #convert this entity
-                            item = self.entity_to_json_safe_dict(item)
-                        
-                        #add this item to the list of processed items
-                        items.append(item)
-
-                    #set this property value to be the list of processed items
-                    propvalue = items
-
-                #eg User.role = <UserRoleEntity>
-                elif hasattr(propvalue, '_presave'):
-                    #convert this entity
-                    propvalue = self.entity_to_json_safe_dict(propvalue)
-
-                obj[prop] = str(propvalue)
             
         return obj
+
+
+    def _sanitise_object(self, proptype, propvalue):
+
+        if proptype == list:
+            items = []
+
+            for item in propvalue:
+                #if the items in this list are entities then convert them to an object as well
+                if hasattr(item, '_presave'):
+                    #convert this entity
+                    item = self.entity_to_json_safe_dict(item)
+                
+                #add this item to the list of processed items
+                items.append(item)
+
+            #set this property value to be the list of processed items
+            propvalue = items
+
+        #eg User.role = <UserRoleEntity>
+        elif hasattr(propvalue, '_presave'):
+            #convert this entity
+            propvalue = self.entity_to_json_safe_dict(propvalue)
+
+        elif proptype == dict:
+            for k,v in propvalue.items():
+                propvalue[k] = self._sanitise_object(type(v), v)
+
+        else:
+            propvalue = str(propvalue)
+
+        return propvalue
 
 
 
@@ -189,12 +201,16 @@ class EntityManager:
         return str(string[string.rfind(".")+1:string.rfind("'")])
 
 
-    def find_raw(self, collectionname, objfilter=None, sort=None):
+    def find_raw(self, collectionname, objfilter=None, sort=None, count=False):
         """
         Find all entries for a given collection
         """
-        if self.debug: log_to_file("db.%s.find(%s, sort=%s)" % (collectionname, objfilter, sort))
-        return self.db[collectionname].find(objfilter, sort=sort)
+        if count:
+            if self.debug: log_to_file("db.%s.find(%s).count()" % (collectionname, objfilter, sort))
+            return self.db[collectionname].find(objfilter).count()
+        else:
+            if self.debug: log_to_file("db.%s.find(%s, sort=%s)" % (collectionname, objfilter, sort))
+            return self.db[collectionname].find(objfilter, sort=sort)
 
 
     def find(self, collectionname, objfilter=None, sort=None):
@@ -202,7 +218,7 @@ class EntityManager:
         Find all entries for a given collection and return them as a instances of the given entity
         """
         items = []
-        for item in self.find_raw(collectionname, objfilter, sort):
+        for item in self.find_raw(collectionname, objfilter=objfilter, sort=sort):
             items.append(self._hydate(item))
 
         return items

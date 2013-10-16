@@ -3,6 +3,7 @@ from BaseModel import BaseModel
 from Crypto.Hash import SHA
 import random
 import string
+import inspect
 
 class User(BaseModel):
 
@@ -175,3 +176,59 @@ class AuthService:
 
             return session
 
+
+
+import bottle
+
+class AuthPlugin(object):
+    name = 'auth'
+    api  = 2
+
+    def __init__(self, entityManager, redirect_url='/auth/login', include_routes=None, exclude_routes=None):
+        self.redirect_url = redirect_url
+        self.include_routes = include_routes
+        self.exclude_routes = exclude_routes
+        self.em = entityManager
+
+    def apply(self, callback, route):
+
+        def wrapper(*args, **kwargs):
+            if bottle.request.get_cookie('token'):
+                authService = AuthService(self.em)
+                
+                session = authService.check_session(bottle.request.get_cookie('token')
+                                            , bottle.request.get('REMOTE_ADDR')
+                                            , bottle.request.get('HTTP_USER_AGENT'))
+
+                if not session:
+                    if self.redirect_url is not None:
+                        return bottle.redirect(self.redirect_url)
+                    else:
+                        return HTTPError(403, 'Access denied')
+
+                else:
+                    bottle.response.set_cookie('token', str(session.public_id),\
+                                           expires=session.expires,\
+                                            httponly=True, path='/')
+
+                    bottle.request.session = session
+                    return callback(*args, **kwargs)
+
+            
+            elif bottle.request.GET.get('apikey'):
+                users = self.em.find('User', {'api_key':bottle.request.GET.get('apikey')})
+
+                if len(users)==1:
+                    bottle.request.session = session
+                    return callback(*args, **kwargs)
+                else:
+                    return HTTPError(403, 'Access denied')
+
+            else:
+                if self.redirect_url is not None:
+                    return bottle.redirect(self.redirect_url)
+                else:
+                    return HTTPError(403, 'Access denied')
+            
+
+        return wrapper
