@@ -7,33 +7,41 @@ import bottle
 import settings
 from Helpers import logger
 from EntityManager import EntityManager
-from Auth.auth import AuthService, User
+from Auth.auth import AuthService, User, AuthPlugin, login_form, forgotten_password_form, reset_password_form
 from datetime import datetime
+from BottlePlugins import FormBinderPlugin
+from Helpers.emailHelper import Email
 
+form_binder_plugin = FormBinderPlugin()
+auth_plugin = AuthPlugin(EntityManager())
 
-
+app = bottle.Bottle()
 
 #######################################################
 # Auth routes
 #######################################################
-@bottle.route('/login', skip=True)
+@app.route('/login')
 def login():
-    return bottle.template('login.tpl', vd={})
+    viewdata = {
+        'form':login_form().get_html(row_class='form-group', submit_btn_class="btn btn-primary", submit_btn_text='Login')
+    }
+    return bottle.template('login.tpl', vd=viewdata)
 
 
-@bottle.route('/login', method='POST', skip=True)
+@app.route('/login', method='POST', apply=[form_binder_plugin], form=login_form)
 def login():
-    e = bottle.request.POST.get('email')
-    p = bottle.request.POST.get('password')
+    form = bottle.request.form
+
     ip = bottle.request.get('REMOTE_ADDR')
     ua = bottle.request.get('HTTP_USER_AGENT')
 
     error = None
 
-    if e and p:
+    if form.is_valid():
+        u = form.entity
         a = AuthService(EntityManager())
 
-        session = a.login(e, p, ip, ua)
+        session = a.login(u.email, u.password, ip, ua)
 
         if session:
             bottle.response.set_cookie('token', str(session.public_id),\
@@ -46,13 +54,17 @@ def login():
             return res
 
         else:
-            error = a.errors[0]
+            form.errors.append(a.errors[0])
 
-    return bottle.template('login.tpl', vd={
-            'error':error
-        })
 
-@bottle.route('/logout')
+    viewdata = {
+        'form':form.get_html(row_class='form-group', submit_btn_class="btn btn-primary", submit_btn_text='Login')
+    }
+
+    return bottle.template('login.tpl', vd=viewdata)
+
+
+@app.route('/logout', apply=[auth_plugin])
 def logout():
     a = AuthService(EntityManager())
     a.logout(bottle.request.session)
@@ -61,67 +73,78 @@ def logout():
 
 
 
-@bottle.route('/forgotten-password', method='GET', skip=True)
+@app.route('/forgotten-password', method='GET')
 def forgotten_password():
-    return bottle.template('forgotten_password', vd={})
+    viewdata = {
+        'form':forgotten_password_form().get_html(row_class='form-group', submit_btn_class="btn btn-primary", submit_btn_text='Submit')
+    }
+
+    return bottle.template('forgotten_password', vd=viewdata)
 
 
-@bottle.route('/forgotten-password', method='POST', skip=True)
+@app.route('/forgotten-password', method='POST', apply=[form_binder_plugin], form=forgotten_password_form)
 def forgotten_password():
-    e = bottle.request.POST.get('email')
+    form = bottle.request.form
 
-    a = AuthService(EntityManager())
-    token = a.generate_password_token(e)
+    if form.is_valid():
+        e = form.entity.email
+        a = AuthService(EntityManager())
+        token = a.generate_password_token(e)
 
-    if token:
-        e = Email(recipients=[e])
-        body = 'You have requested to reset your password for www.fotodelic.co.uk, please follow this link to reset it:\n\r\n https://%s/reset-password/%s' % (bottle.request.environ['HTTP_HOST'], token)
-        e.send('Fotodelic - password reset request', body)               
+        if token:
+            e = Email(recipients=[e])
+            body = 'You have requested to reset your password for www.fotodelic.co.uk, please follow this link to reset it:\n\r\n https://%s/auth/reset-password/%s' % (bottle.request.environ['HTTP_HOST'], token)
+            e.send('Fotodelic - password reset request', body)               
 
-        return bottle.redirect('/forgotten-password-sent')
+            return bottle.redirect('/auth/forgotten-password-sent')
 
+        else:
+            form.errors.append(a.errors[0])
 
     return bottle.template('forgotten_password', vd={
-            'error':a.errors[0]
+            'form':form.get_html(row_class='form-group', submit_btn_class="btn btn-primary", submit_btn_text='Submit')
         })
 
 
 
-@bottle.route('/forgotten-password-sent', method='GET', skip=True)
+@app.route('/forgotten-password-sent', method='GET')
 def forgotten_password():
     return bottle.template('forgotten_password_sent', vd={})
 
 
 
-@bottle.route('/reset-password/:key', method='GET')
+@app.route('/reset-password/:key', method='GET', apply=[form_binder_plugin], form=reset_password_form)
 def index(key):
-    return bottle.template('reset_password', vd={'key':key})
+    form = bottle.request.form
+    form.entity.key = key
+    
+    viewdata={
+        'form':form.get_html(row_class='form-group', submit_btn_class="btn btn-primary", submit_btn_text='Submit')
+    }
+
+    return bottle.template('reset_password', vd=viewdata)
 
 
-@bottle.route('/reset-password/:key', method='POST', skip=True)
+@app.route('/reset-password/:key', method='POST', apply=[form_binder_plugin], form=reset_password_form)
 def index(key):
-    k = bottle.request.POST.get('key')
-    p = bottle.request.POST.get('password')
-    p2 = bottle.request.POST.get('password2')
-    error = None
+    form = bottle.request.form
 
-    if (p and p2) and (p==p2):
+    if form.is_valid():
         a = AuthService(EntityManager())
-        if a.reset_password(key, p):
-            return bottle.redirect('/reset-password-success')
+        if a.reset_password(form.entity.key, form.entity.password):
+            return bottle.redirect('/auth/reset-password-success')
 
         else:
-            error = a.errors[0]
+            form.errors.append(a.errors[0])
 
-    else:
-        error = 'Please enter two matching passwords'
-
-
-    return bottle.template('reset_password', vd={'error': error})
-
+    
+    return bottle.template('reset_password', vd={
+        'form':form.get_html(row_class='form-group', submit_btn_class="btn btn-primary", submit_btn_text='Submit')
+    })
 
 
-@bottle.route('/reset-password-success', method='GET', skip=True)
+
+@app.route('/reset-password-success', method='GET')
 def index():
     return bottle.template('reset_password_success', vd={})
 
@@ -134,5 +157,5 @@ def index():
 
 
 
-auth_app = bottle.app()
+auth_app = app
 

@@ -26,7 +26,10 @@ class EntityManager:
         #for each property in this entity class
         for prop in dir(entity):
             #we dont want anything callable e.g. methods, __doc__, etc
-            if not callable(getattr(entity, prop)) and not prop.startswith('__'):
+            if not callable(getattr(entity, prop)) \
+                and not prop.startswith('__') \
+                and not prop == '_form' \
+                and not prop == '_bound_form':
                 #get this property's type
                 proptype = type(getattr(entity, prop))
                 #get the value from the data for this property
@@ -81,7 +84,10 @@ class EntityManager:
         #for each property in this entity class
         for prop in dir(entity):
             #we dont want anything callable e.g. methods, __doc__, etc
-            if not callable(getattr(entity, prop)) and not prop.startswith('__'):
+            if not callable(getattr(entity, prop)) \
+                and not prop.startswith('__') \
+                and not prop == '_form' \
+                and not prop == '_bound_form':
                 #get this property's type
                 proptype = type(getattr(entity, prop))
                 #get the value from the data for this property
@@ -127,7 +133,10 @@ class EntityManager:
         #for each property in this entity class
         for prop in dir(entity):
             #we dont want anything callable e.g. methods, __doc__, etc
-            if not callable(getattr(entity, prop)) and not prop.startswith('__'):
+            if not callable(getattr(entity, prop)) \
+                and not prop.startswith('__') \
+                and not prop == '_form' \
+                and not prop == '_bound_form':
                 #get this property's type
                 proptype = type(getattr(entity, prop))
                 #get the value from the data for this property
