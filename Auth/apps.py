@@ -38,7 +38,7 @@ def login():
     error = None
 
     if form.is_valid():
-        u = form.entity
+        u = form.hydrate_entity(User())
         a = AuthService(EntityManager())
 
         session = a.login(u.email, u.password, ip, ua)
@@ -87,7 +87,7 @@ def forgotten_password():
     form = bottle.request.form
 
     if form.is_valid():
-        e = form.entity.email
+        e = form.get_value('email')
         a = AuthService(EntityManager())
         token = a.generate_password_token(e)
 
@@ -116,7 +116,7 @@ def forgotten_password():
 @app.route('/reset-password/:key', method='GET', apply=[form_binder_plugin], form=reset_password_form)
 def index(key):
     form = bottle.request.form
-    form.entity.key = key
+    form.set_value('key', key)
     
     viewdata={
         'form':form.get_html(row_class='form-group', submit_btn_class="btn btn-primary", submit_btn_text='Submit')
@@ -131,7 +131,7 @@ def index(key):
 
     if form.is_valid():
         a = AuthService(EntityManager())
-        if a.reset_password(form.entity.key, form.entity.password):
+        if a.reset_password(form.get_value('key'), form.get_value('password')):
             return bottle.redirect('/auth/reset-password-success')
 
         else:

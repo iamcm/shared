@@ -1,41 +1,69 @@
 
 from bottle import html_escape
 
-
-HIDDEN_TYPE = "hidden"
-TEXT_TYPE = "text"
-PASSWORD_TYPE = "password"
-TEXTAREA_TYPE = "textarea"
-CHECKBOX_TYPE = "checkbox"
-RADIO_TYPE = "radio"
-SELECT_TYPE = "select"
+class Types:
+	HIDDEN_TYPE = "hidden"
+	INT_TYPE = "int"
+	TEXT_TYPE = "text"
+	PASSWORD_TYPE = "password"
+	TEXTAREA_TYPE = "textarea"
+	CHECKBOX_TYPE = "checkbox"
+	RADIO_TYPE = "radio"
+	SELECT_TYPE = "select"
+	MULTI_SELECT_TYPE = "multiselect"
 
 
 class FormBuilder:
-	def __init__(self, entity, formitems=[], validator=None):
-		self.entity = entity
+	def __init__(self, formitems=[], validator=None, entity=None):
 		self.formitems = formitems
-		self._is_valid = True
 		self.errors = []
-		self.validate = False
 		self.validator = validator
 
+		if entity:
+			for item in formitems:
+				if hasattr(entity, item.name):
+					item.value = getattr(entity, item.name)
+
+
+	def get_value(self, name):
+		for item in self.formitems:
+			if item.name == name:
+				return item.value
+
+		return None
+
+	def set_value(self, name, value):
+		for item in self.formitems:
+			if item.name == name:
+				item.value = value
+
+
+	def hydrate_entity(self, entity):
+		for item in self.formitems:
+			if hasattr(entity, item.name) or item.name == '_id':
+				setattr(entity, item.name, item.value)
+
+		return entity
+
 	def is_valid(self):
-		self.validate = True
 		self.errors = []
-		self.get_html() #force value binding and formitem validation
+		for item in self.formitems:
+			if not item.is_valid():
+				if item.error_message not in self.errors:
+					self.errors.append(item.error_message)
+
 		if self.validator:
-			self.errors.extend(self.validator(self.entity))
+			self.errors.extend(self.validator(self))
 
-		return self._is_valid
+		return len(self.errors) == 0
 
-	def get_html(self, action='', method='post', row_class=None, id=None, form_class=None\
+	def get_html(self, action='', method='post', row_class=None, form_id=None, form_class=None\
 					,submit_btn_class=None, submit_btn_text='Save'):
 		errorshtml = ''
 
 		idhtml = ''
-		if id:
-			idhtml = 'id="%s"' % id
+		if form_id:
+			idhtml = 'id="%s"' % form_id
 
 		formclasshtml = ''
 		if form_class:
@@ -43,18 +71,19 @@ class FormBuilder:
 
 		formhtml = '<form action="%s" method="%s" %s %s>' % (action, method, idhtml, formclasshtml)
 		for item in self.formitems:
-			value = getattr(self.entity, item.name)
-			formhtml += item.get_html(value, row_class)
-			if self.validate and not item.is_valid():
-				if item.error_message() not in self.errors:
-					self.errors.append(item.error_message())
+			formhtml += item.get_html(row_class)
 
 
 		submitclasshtml = ''
 		if submit_btn_class:
 			submitclasshtml = 'class="%s"' % submit_btn_class
 
-		formhtml += '<input type="submit" value="%s" %s />' % (submit_btn_text, submitclasshtml)
+
+		rowclasshtml = ''
+		if row_class:
+			rowclasshtml = 'class="%s"' % row_class
+
+		formhtml += '<div %s><input type="submit" value="%s" %s /></div>' % (rowclasshtml, submit_btn_text, submitclasshtml)
 		formhtml += '</form>'
 
 		if len(self.errors) > 0 != '':
@@ -77,28 +106,36 @@ class FormItem:
 		self.select_list_items = select_list_items
 		self.required = required
 		self.value = None
+		self.error_message = ''
 
 	def is_valid(self):
-		if self.required and (self.value is None or str(self.value).strip() == ''):
-			return False
-		else:
-			return True
-
-	def error_message(self):
 		if self.label_text:
 			text = self.label_text
 		else:
 			text = self.name
 
-		return '%s is a required field' % text
+		if self.required and (self.value is None or str(self.value).strip() == ''):
+			self.error_message = '%s is a required field' % text
+			return False
+		elif self.required and self.type == Types.INT_TYPE:
+			try:
+				int(self.value)
+				return True
+			except:
+				self.error_message = '%s must be an integer' % text
+				return False
+		else:
+			return True
 
-	def get_html(self, value=None, row_class=None):
+	def bind_value(self, value):
 		if value and type(value) == str:
-			value = html_escape(value)
+			value = html_escape(value.strip())
 		elif value and type(value) == int:
 			value = str(value)
 
 		self.value = value
+
+	def get_html(self, row_class=None):
 
 		classhtml = ''
 		if self.class_name:
@@ -110,17 +147,17 @@ class FormItem:
 
 		template = ""
 
-		if self.type == HIDDEN_TYPE:
-			if value:
-				valuehtml = 'value="%s"' % value
+		if self.type == Types.HIDDEN_TYPE:
+			if self.value:
+				valuehtml = 'value="%s"' % self.value
 			else:
 				valuehtml = ''
 
 			template += '<input type="hidden" name="%s" %s %s %s />' % (self.name, classhtml, idhtml, valuehtml)
 
-		elif self.type == TEXT_TYPE:
-			if value:
-				valuehtml = 'value="%s"' % value
+		elif self.type == Types.TEXT_TYPE or self.type == Types.INT_TYPE:
+			if self.value:
+				valuehtml = 'value="%s"' % self.value
 			else:
 				valuehtml = ''
 
@@ -128,15 +165,15 @@ class FormItem:
 				template += '<label for="%s">%s</label>' % (self.id, self.label_text)
 			template += '<input type="text" name="%s" %s %s %s />' % (self.name, classhtml, idhtml, valuehtml)
 
-		elif self.type == PASSWORD_TYPE:
+		elif self.type == Types.PASSWORD_TYPE:
 
 			if self.label_text and self.id:
 				template += '<label for="%s">%s</label>' % (self.id, self.label_text)
 			template += '<input type="password" name="%s" %s %s />' % (self.name, classhtml, idhtml)
 
-		elif self.type == TEXTAREA_TYPE:
-			if value:
-				valuehtml = value
+		elif self.type == Types.TEXTAREA_TYPE:
+			if self.value:
+				valuehtml = self.value
 			else:
 				valuehtml = ''
 
@@ -145,8 +182,8 @@ class FormItem:
 			template += '<textarea name="%s" %s %s>%s</textarea>' % (self.name, classhtml, idhtml, valuehtml)
 
 
-		elif self.type == CHECKBOX_TYPE:
-			if value and (value=='1' or value==True):
+		elif self.type == Types.CHECKBOX_TYPE:
+			if self.value and (self.value=='1' or self.value==True):
 				valuehtml = 'checked="checked"'
 			else:
 				valuehtml = ''
@@ -157,8 +194,8 @@ class FormItem:
 
 
 
-		elif self.type == RADIO_TYPE:
-			if value and (value=='1' or value==True):
+		elif self.type == Types.RADIO_TYPE:
+			if self.value and (self.value=='1' or self.value==True):
 				valuehtml = 'checked="checked"'
 			else:
 				valuehtml = ''
@@ -169,20 +206,39 @@ class FormItem:
 
 
 
-		elif self.type == SELECT_TYPE:
+		elif self.type == Types.SELECT_TYPE:
 			if self.label_text and self.id:
 				template += '<label for="%s">%s</label>' % (self.id, self.label_text)
-				template += '<select name="%s" %s %s>' % (self.name, classhtml, idhtml)
+				
+			template += '<select name="%s" %s %s>' % (self.name, classhtml, idhtml)
 
-				for item in self.select_list_items:
-					if value and str(value) == str(item[0]):
-						valuehtml = 'selected="selected"'
-					else:
-						valuehtml = ''
+			for item in self.select_list_items:
+				if self.value and str(self.value) == str(item[0]):
+					valuehtml = 'selected="selected"'
+				else:
+					valuehtml = ''
 
-					template += '<option value="%s" %s>%s</option>' % (item[0], valuehtml, item[1])
+				template += '<option value="%s" %s>%s</option>' % (item[0], valuehtml, item[1])
 
-				template += '</select>'
+			template += '</select>'
+
+
+
+		elif self.type == Types.MULTI_SELECT_TYPE:
+			if self.label_text and self.id:
+				template += '<label for="%s">%s</label>' % (self.id, self.label_text)
+				
+			template += '<select name="%s" %s %s multiple>' % (self.name, classhtml, idhtml)
+
+			for item in self.select_list_items:
+				if self.value and len([v for v in self.value if str(v)==str(item[0])]) > 0:
+					valuehtml = 'selected="selected"'
+				else:
+					valuehtml = ''
+
+				template += '<option value="%s" %s>%s</option>' % (item[0], valuehtml, item[1])
+
+			template += '</select>'
 
 
 		rowclasshtml = ''

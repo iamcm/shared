@@ -274,8 +274,12 @@ class EntityManager:
         #call the pre-save hook
         entity._presave(self)
 
+        #be sure the _id is an ObjectId
+        if hasattr(entity, '_id'):
+            setattr(entity, '_id', ObjectId(entity._id))
+
         obj = self._entity_to_dict(entity, True)
-        
+
         if self.debug: log_to_file("db.%s.save(%s)" % (collectionname, obj))
 
         entity._id = self.db[collectionname].save(obj)

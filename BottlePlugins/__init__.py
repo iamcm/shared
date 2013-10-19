@@ -1,4 +1,5 @@
 import bottle
+from FormBinder import Types
 
 class ViewdataPlugin(object):
     name = 'viewdata'
@@ -8,7 +9,6 @@ class ViewdataPlugin(object):
         self.vd = {}
         self.vd.update(vd)
         self.callback_function = callback_function
-        self.bottle_app_reference = bottle_app_reference
 
     def apply(self, callback, route):
 
@@ -28,37 +28,29 @@ class FormBinderPlugin(object):
     api  = 2
 
     def __init__(self):
-        self.form  = None
+        pass
 
     def apply(self, callback, route):
-        self.form = route.config.get('form')
 
         def wrapper(*a, **ka):
-            form = self.form()
-            instance = form.entity
+            form = route.config.get('form')()
             for formitem in form.formitems:
                 if bottle.request.params.get(formitem.name):
-                    if formitem.type == 'int':
+                    if formitem.type == Types.MULTI_SELECT_TYPE:
                         try:
-                            setattr(instance, formitem.name, int(bottle.request.params.get(formitem.name)))
+                            formitem.bind_value(bottle.request.params.getall(formitem.name))
                         except:
                             pass
 
-                    elif formitem.type == 'list_int':
+                    elif formitem.type == Types.INT_TYPE:
                         try:
-                            setattr(instance, formitem.name, [int(i) for i in bottle.request.params.getall(formitem.name)])
-                        except:
-                            pass
-
-                    elif formitem.type == 'list_string':
-                        try:
-                            setattr(instance, formitem.name, [str(i) for i in bottle.request.params.getall(formitem.name)])
+                            formitem.bind_value(int(bottle.request.params.get(formitem.name)))
                         except:
                             pass
 
                     else:
                         try:
-                            setattr(instance, formitem.name, str(bottle.request.params.get(formitem.name)))
+                            formitem.bind_value(str(bottle.request.params.get(formitem.name)))
                         except:
                             pass
 

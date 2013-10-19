@@ -246,35 +246,24 @@ class AuthPlugin(object):
 
 
 
-
-class ForgottenPasswordForm:
-    def __init__(self):
-        self.email = None
-
 def forgotten_password_form():
     formitems = []
-    formitems.append(FormItem(TEXT_TYPE, 'email', id='email', label_text='Email', class_name="form-control", required=True))
+    formitems.append(FormItem(Types.TEXT_TYPE, 'email', id='email', label_text='Email', class_name="form-control", required=True))
 
-    return FormBuilder(ForgottenPasswordForm(), formitems)
+    return FormBuilder(formitems)
 
-
-class ResetPasswordForm:
-    def __init__(self):
-        self.key = None
-        self.password = None
-        self.passwordconf = None
 
 def reset_password_form():
     formitems = []
-    formitems.append(FormItem(HIDDEN_TYPE, 'key', required=True))
-    formitems.append(FormItem(PASSWORD_TYPE, 'password', id='password', label_text='Password', class_name="form-control", required=True))
-    formitems.append(FormItem(PASSWORD_TYPE, 'passwordconf', id='email', label_text='Confirm Password', class_name="form-control", required=True))
+    formitems.append(FormItem(Types.HIDDEN_TYPE, 'key', required=True))
+    formitems.append(FormItem(Types.PASSWORD_TYPE, 'password', id='password', label_text='Password', class_name="form-control", required=True))
+    formitems.append(FormItem(Types.PASSWORD_TYPE, 'passwordconf', id='email', label_text='Confirm Password', class_name="form-control", required=True))
 
-    return FormBuilder(ResetPasswordForm(), formitems, validator=reset_password_validation)
+    return FormBuilder(formitems, validator=reset_password_validation)
 
-def reset_password_validation(entity):
+def reset_password_validation(form):
     errors = []
-    if entity.password != entity.passwordconf:
+    if form.get_value('password') != form.get_value('passwordconf'):
         errors.append('The passwords do not match')
 
     return errors
@@ -282,9 +271,9 @@ def reset_password_validation(entity):
 
 def login_form():
     formitems = []
-    formitems.append(FormItem(TEXT_TYPE, 'email', id='email', label_text='Email', class_name="form-control", required=True))
-    formitems.append(FormItem(PASSWORD_TYPE, 'password', id='password', label_text='Password', class_name="form-control", required=True))
+    formitems.append(FormItem(Types.TEXT_TYPE, 'email', id='email', label_text='Email', class_name="form-control", required=True))
+    formitems.append(FormItem(Types.PASSWORD_TYPE, 'password', id='password', label_text='Password', class_name="form-control", required=True))
 
-    return FormBuilder(User(), formitems)
+    return FormBuilder(formitems)
 
 
