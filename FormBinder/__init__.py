@@ -22,7 +22,7 @@ class FormBuilder:
 		if entity:
 			for item in formitems:
 				if hasattr(entity, item.name):
-					item.value = getattr(entity, item.name)
+					item.bind_value(getattr(entity, item.name))
 
 
 	def get_value(self, name):
@@ -32,10 +32,11 @@ class FormBuilder:
 
 		return None
 
+
 	def set_value(self, name, value):
 		for item in self.formitems:
 			if item.name == name:
-				item.value = value
+				item.bind_value(value)
 
 
 	def hydrate_entity(self, entity):
@@ -44,6 +45,7 @@ class FormBuilder:
 				setattr(entity, item.name, item.value)
 
 		return entity
+
 
 	def is_valid(self):
 		self.errors = []
@@ -132,8 +134,14 @@ class FormItem:
 	def bind_value(self, value):
 		if value and type(value) == str:
 			value = html_escape(value.strip())
-		elif value and type(value) == int:
-			value = str(value)
+		elif value and type(value) == list:
+			escaped_list = []
+			for i in value:
+				if type(i) == str:
+					escaped_list.append(html_escape(i))
+				else:
+					escaped_list.append(i)
+			value = escaped_list
 
 		self.value = value
 
