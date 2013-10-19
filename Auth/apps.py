@@ -9,7 +9,7 @@ from Helpers import logger
 from EntityManager import EntityManager
 from Auth.auth import AuthService, User, AuthPlugin, login_form, forgotten_password_form, reset_password_form
 from datetime import datetime
-from BottlePlugins import FormBinderPlugin
+from FormBinder import FormBinderPlugin
 from Helpers.emailHelper import Email
 
 form_binder_plugin = FormBinderPlugin()

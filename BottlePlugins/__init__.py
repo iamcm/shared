@@ -23,47 +23,6 @@ class ViewdataPlugin(object):
 
 
 
-class FormBinderPlugin(object):
-    name = 'form_binder'
-    api  = 2
-
-    def __init__(self):
-        pass
-
-    def apply(self, callback, route):
-
-        def wrapper(*a, **ka):
-            form = route.config.get('form')()
-            for formitem in form.formitems:
-                if bottle.request.params.get(formitem.name):
-                    if formitem.type == Types.MULTI_SELECT_TYPE:
-                        try:
-                            formitem.bind_value(bottle.request.params.getall(formitem.name))
-                        except:
-                            pass
-
-                    elif formitem.type == Types.INT_TYPE:
-                        try:
-                            formitem.bind_value(int(bottle.request.params.get(formitem.name)))
-                        except:
-                            pass
-
-                    else:
-                        try:
-                            formitem.bind_value(str(bottle.request.params.get(formitem.name)))
-                        except:
-                            pass
-
-            bottle.request.form = form
-
-            return callback(*a, **ka)
-
-        return wrapper
-
-
-
-
-
 class ForceProtocolPlugin(object):
     name = 'force_protocol'
     api  = 2
