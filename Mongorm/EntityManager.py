@@ -10,10 +10,15 @@ from collections import OrderedDict
 
 class EntityManager:
 
-    def __init__(self, db=None, debug=False):
-        client = MongoClient(DBHOST, port=DBPORT)
-        self.db = client[db or DBNAME]
-        self.debug = DBDEBUG or debug
+    def __init__(self, dbhost=None, dbport=None, dbname=None, dbdebug=False):
+        dbhost = dbhost or DBHOST
+        dbport = dbport or DBPORT
+        dbname = dbname or DBNAME
+        dbdebug = dbdebug or DBDEBUG
+
+        client = MongoClient(dbhost, port=dbport)
+        self.db = client[dbname]
+        self.debug = dbdebug
         
 
     def _hydate(self, data):
@@ -27,9 +32,7 @@ class EntityManager:
         for prop in dir(entity):
             #we dont want anything callable e.g. methods, __doc__, etc
             if not callable(getattr(entity, prop)) \
-                and not prop.startswith('__') \
-                and not prop == '_form' \
-                and not prop == '_bound_form':
+                and not prop.startswith('__'):
                 #get this property's type
                 proptype = type(getattr(entity, prop))
                 #get the value from the data for this property
@@ -85,9 +88,7 @@ class EntityManager:
         for prop in dir(entity):
             #we dont want anything callable e.g. methods, __doc__, etc
             if not callable(getattr(entity, prop)) \
-                and not prop.startswith('__') \
-                and not prop == '_form' \
-                and not prop == '_bound_form':
+                and not prop.startswith('__'):
                 #get this property's type
                 proptype = type(getattr(entity, prop))
                 #get the value from the data for this property
@@ -134,9 +135,7 @@ class EntityManager:
         for prop in dir(entity):
             #we dont want anything callable e.g. methods, __doc__, etc
             if not callable(getattr(entity, prop)) \
-                and not prop.startswith('__') \
-                and not prop == '_form' \
-                and not prop == '_bound_form':
+                and not prop.startswith('__'):
                 #get this property's type
                 proptype = type(getattr(entity, prop))
                 #get the value from the data for this property
