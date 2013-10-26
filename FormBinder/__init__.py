@@ -11,6 +11,7 @@ class Types:
 	RADIO_TYPE = "radio"
 	SELECT_TYPE = "select"
 	MULTI_SELECT_TYPE = "multiselect"
+	FILE_TYPE = "file"
 
 
 class FormBuilder:
@@ -99,7 +100,7 @@ class FormBuilder:
 
 
 class FormItem:
-	def __init__(self, type, name, class_name=None, id=None, label_text=None, select_list_items=[], required=False):
+	def __init__(self, type, name, class_name=None, id=None, label_text=None, select_list_items=[], required=False, html=False):
 		self.type = type
 		self.name = name
 		self.class_name = class_name
@@ -109,6 +110,7 @@ class FormItem:
 		self.required = required
 		self.value = None
 		self.error_message = ''
+		self.html = html
 
 	def is_valid(self):
 		if self.label_text:
@@ -132,12 +134,12 @@ class FormItem:
 			return True
 
 	def bind_value(self, value):
-		if value and type(value) == str:
+		if value and type(value) == str and not self.html:
 			value = html_escape(value.strip())
 		elif value and type(value) == list:
 			escaped_list = []
 			for i in value:
-				if type(i) == str:
+				if type(i) == str and not self.html:
 					escaped_list.append(html_escape(i))
 				else:
 					escaped_list.append(i)
@@ -249,6 +251,16 @@ class FormItem:
 				template += '<option value="%s" %s>%s</option>' % (item[0], valuehtml, item[1])
 
 			template += '</select>'
+
+		elif self.type == Types.FILE_TYPE:
+			if self.value:
+				valuehtml = 'value="%s"' % self.value
+			else:
+				valuehtml = ''
+
+			if self.label_text and self.id:
+				template += '<label for="%s">%s</label>' % (self.id, self.label_text)
+			template += '<input type="file" name="%s" %s %s %s />' % (self.name, classhtml, idhtml, valuehtml)
 
 
 		rowclasshtml = ''

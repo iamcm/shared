@@ -21,7 +21,7 @@ class EntityManager:
         self.debug = dbdebug
         
 
-    def _hydate(self, data):
+    def _hydrate(self, data):
         """
         Use the given data to identify and populate and instance an entity
         """
@@ -38,33 +38,34 @@ class EntityManager:
                 #get the value from the data for this property
                 propvalue = data.get(prop)
 
-                #if this is a list then iterate each list item and
-                #hydrate any entities if necessary
-                if proptype == list:
-                    items = []
-                    for item in propvalue:
-                        #we can tell if this is an entity that we need to hydrate by
-                        #looking for dict's with our signature __instanceOf__ item
-                        if type(item)==dict and item.has_key('__instanceOf__'):
-                            #hydrate this item
-                            entityinstance = self._unicode_to_class_name(item['__instanceOf__'])
-                            entityid = item['_id']
+                if propvalue is not None:
+                    #if this is a list then iterate each list item and
+                    #hydrate any entities if necessary
+                    if proptype == list:
+                        items = []
+                        for item in propvalue:
+                            #we can tell if this is an entity that we need to hydrate by
+                            #looking for dict's with our signature __instanceOf__ item
+                            if type(item)==dict and item.has_key('__instanceOf__'):
+                                #hydrate this item
+                                entityinstance = self._unicode_to_class_name(item['__instanceOf__'])
+                                entityid = item['_id']
 
-                            #add this item to the list of hydrated items
-                            item = self.find_one(entityinstance, entityid)
+                                #add this item to the list of hydrated items
+                                item = self.find_one(entityinstance, entityid)
 
-                        items.append(item)
+                            items.append(item)
 
-                    #set this property value to be the list of processed items
-                    propvalue = items
+                        #set this property value to be the list of processed items
+                        propvalue = items
 
-                #else if this is a dict that we need to hydrate
-                elif type(propvalue)==dict and propvalue.has_key('__instanceOf__'):
-                    #hydrate this item
-                    entityinstance = self._unicode_to_class_name(propvalue['__instanceOf__'])
-                    entityid = propvalue['_id']
+                    #else if this is a dict that we need to hydrate
+                    elif type(propvalue)==dict and propvalue.has_key('__instanceOf__'):
+                        #hydrate this item
+                        entityinstance = self._unicode_to_class_name(propvalue['__instanceOf__'])
+                        entityid = propvalue['_id']
 
-                    propvalue = self.find_one(entityinstance, entityid)
+                        propvalue = self.find_one(entityinstance, entityid)
 
                 #now assign our final propvalue to our entity
                 setattr(entity, prop, propvalue)
@@ -94,30 +95,31 @@ class EntityManager:
                 #get the value from the data for this property
                 propvalue = getattr(entity, prop)
 
-                #eg User.groups = [<GroupEntity>,<GroupEntity>,<GroupEntity>]
-                if proptype == list:
-                    items = []
+                if propvalue is not None:
+                    #eg User.groups = [<GroupEntity>,<GroupEntity>,<GroupEntity>]
+                    if proptype == list:
+                        items = []
 
-                    for item in propvalue:
-                        #if the items in this list are entities then convert them to an object as well
-                        if hasattr(item, '_presave') and saveChildEntities:
-                            #save the entity
-                            item = self.save(self._unicode_to_class_name(str(item.__class__)), item)
-                            #convert this entity
-                            item = self._entity_to_dict(item)
-                        
-                        #add this item to the list of processed items
-                        items.append(item)
+                        for item in propvalue:
+                            #if the items in this list are entities then convert them to an object as well
+                            if hasattr(item, '_presave') and saveChildEntities:
+                                #save the entity
+                                item = self.save(self._unicode_to_class_name(str(item.__class__)), item)
+                                #convert this entity
+                                item = self._entity_to_dict(item)
+                            
+                            #add this item to the list of processed items
+                            items.append(item)
 
-                    #set this property value to be the list of processed items
-                    propvalue = items
+                        #set this property value to be the list of processed items
+                        propvalue = items
 
-                #eg User.role = <UserRoleEntity>
-                elif hasattr(propvalue, '_presave') and saveChildEntities:
-                    #save the entity
-                    propvalue = self.save(self._unicode_to_class_name(str(propvalue.__class__)), propvalue)
-                    #convert this entity
-                    propvalue = self._entity_to_dict(propvalue)
+                    #eg User.role = <UserRoleEntity>
+                    elif hasattr(propvalue, '_presave') and saveChildEntities:
+                        #save the entity
+                        propvalue = self.save(self._unicode_to_class_name(str(propvalue.__class__)), propvalue)
+                        #convert this entity
+                        propvalue = self._entity_to_dict(propvalue)
 
                 obj[prop] = propvalue
 
@@ -151,7 +153,7 @@ class EntityManager:
 
         if proptype == list:
             items = []
-
+            
             for item in propvalue:
                 #if the items in this list are entities then convert them to an object as well
                 if hasattr(item, '_presave'):
@@ -227,7 +229,7 @@ class EntityManager:
         """
         items = []
         for item in self.find_raw(collectionname, objfilter=objfilter, sort=sort):
-            items.append(self._hydate(item))
+            items.append(self._hydrate(item))
 
         return items
 
@@ -252,7 +254,7 @@ class EntityManager:
         """
         item = self.find_one_raw(collectionname, objfilter=objfilter)
         if item:
-            item = self._hydate(item)
+            item = self._hydrate(item)
         return item
 
 
@@ -262,7 +264,7 @@ class EntityManager:
         """
         item = self.find_one_raw(collectionname, id=id)
         if item:
-            item = self._hydate(item)
+            item = self._hydrate(item)
         return item
 
 
@@ -400,7 +402,7 @@ class EntityManager:
         for result in final:
             if result[0]['_id'] not in processed_ids:
                 processed_ids.append(result[0]['_id'])
-                entities.append(self._hydate(result[0]))
+                entities.append(self._hydrate(result[0]))
         
         return entities
         
@@ -434,7 +436,7 @@ class EntityManager:
 
         items = []
         for item in self.find_raw(collectionname, criteria):
-            items.append(self._hydate(item))
+            items.append(self._hydrate(item))
 
         return items
 

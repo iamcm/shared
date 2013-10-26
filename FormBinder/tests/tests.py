@@ -25,6 +25,7 @@ class FormBinderTest(unittest.TestCase):
         formitems.append(FormItem(Types.HIDDEN_TYPE, '_id', id='_id'))
         formitems.append(FormItem(Types.TEXT_TYPE, 'title', id='title', label_text='Title', class_name="form-control", required=True))
         formitems.append(FormItem(Types.TEXTAREA_TYPE, 'content', id='content', label_text='Content', class_name="form-control"))
+        formitems.append(FormItem(Types.TEXTAREA_TYPE, 'content_html', id='content_html', label_text='Content', class_name="form-control", html=True))
         formitems.append(FormItem(Types.MULTI_SELECT_TYPE, 'tagIds', id='tagIds', label_text='Tags', class_name="form-control", select_list_items=self.tags))
         formitems.append(FormItem(Types.TEXT_TYPE, 'newTag', id='newTag', label_text='New Tag', class_name="form-control"))
 
@@ -45,6 +46,7 @@ class FormBinderTest(unittest.TestCase):
             '_id':('7489107348902', '7489107348902'),
             'title':('This is a title', 'This is a title'),
             'content':('<a href="/a/url?with=values&more=values">a link</a>','&lt;a href=&quot;/a/url?with=values&amp;more=values&quot;&gt;a link&lt;/a&gt;'),
+            'content_html':('<a href="/a/url?with=values&more=values">a link</a>','<a href="/a/url?with=values&more=values">a link</a>'),
             'tagIds':([1,2, '<tag>is this escaped?</tag>'], [1,2, '&lt;tag&gt;is this escaped?&lt;/tag&gt;']),
             'newTag':('A new tag','A new tag'),
         }
@@ -55,7 +57,7 @@ class FormBinderTest(unittest.TestCase):
         for name, value in values.iteritems():
             self.assertEqual(f.get_value(name), value[1]) #check that they match the escaped version
 
-        html_with_values = '<form action="/url" method="get" id="form-id" class="form-class"><div class="form-group"><input type="hidden" name="_id"  id="_id" value="7489107348902" /></div><div class="form-group"><label for="title">Title</label><input type="text" name="title" class="form-control" id="title" value="This is a title" /></div><div class="form-group"><label for="content">Content</label><textarea name="content" class="form-control" id="content">&lt;a href=&quot;/a/url?with=values&amp;more=values&quot;&gt;a link&lt;/a&gt;</textarea></div><div class="form-group"><label for="tagIds">Tags</label><select name="tagIds" class="form-control" id="tagIds" multiple><option value="0" >Apples</option><option value="1" selected="selected">Bananas</option><option value="2" selected="selected">Pears</option></select></div><div class="form-group"><label for="newTag">New Tag</label><input type="text" name="newTag" class="form-control" id="newTag" value="A new tag" /></div><div class="form-group"><input type="submit" value="Save button" class="submit-class" /></div></form>'
+        html_with_values = '<form action="/url" method="get" id="form-id" class="form-class"><div class="form-group"><input type="hidden" name="_id"  id="_id" value="7489107348902" /></div><div class="form-group"><label for="title">Title</label><input type="text" name="title" class="form-control" id="title" value="This is a title" /></div><div class="form-group"><label for="content">Content</label><textarea name="content" class="form-control" id="content">&lt;a href=&quot;/a/url?with=values&amp;more=values&quot;&gt;a link&lt;/a&gt;</textarea></div><div class="form-group"><label for="content_html">Content</label><textarea name="content_html" class="form-control" id="content_html"><a href="/a/url?with=values&more=values">a link</a></textarea></div><div class="form-group"><label for="tagIds">Tags</label><select name="tagIds" class="form-control" id="tagIds" multiple><option value="0" >Apples</option><option value="1" selected="selected">Bananas</option><option value="2" selected="selected">Pears</option></select></div><div class="form-group"><label for="newTag">New Tag</label><input type="text" name="newTag" class="form-control" id="newTag" value="A new tag" /></div><div class="form-group"><input type="submit" value="Save button" class="submit-class" /></div></form>'
         form_html = f.get_html(action='/url', method='get', row_class='form-group', form_id='form-id'\
                                 ,form_class='form-class', submit_btn_class='submit-class', submit_btn_text='Save button')
         
@@ -69,6 +71,7 @@ class FormBinderTest(unittest.TestCase):
             '_id':('7489107348902', '7489107348902'),
             'title':('This is a title', 'This is a title'),
             'content':('<a href="/a/url?with=values&more=values">a link</a>','&lt;a href=&quot;/a/url?with=values&amp;more=values&quot;&gt;a link&lt;/a&gt;'),
+            'content_html':('<a href="/a/url?with=values&more=values">a link</a>','<a href="/a/url?with=values&more=values">a link</a>'),
             'tagIds':([1,2, '<tag>is this escaped?</tag>'], [1,2, '&lt;tag&gt;is this escaped?&lt;/tag&gt;']),
             'newTag':('A new tag','A new tag'),
         }
@@ -97,6 +100,7 @@ class FormBinderTest(unittest.TestCase):
             '_id':('7489107348902', '7489107348902'),
             'title':('This is a title', 'This is a title'),
             'content':('<a href="/a/url?with=values&more=values">a link</a>','&lt;a href=&quot;/a/url?with=values&amp;more=values&quot;&gt;a link&lt;/a&gt;'),
+            'content_html':('<a href="/a/url?with=values&more=values">a link</a>','<a href="/a/url?with=values&more=values">a link</a>'),
             'tagIds':([1,2, '<tag>is this escaped?</tag>'], [1,2, '&lt;tag&gt;is this escaped?&lt;/tag&gt;']),
             'newTag':('A new tag','A new tag'),
         }
