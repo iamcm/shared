@@ -30,6 +30,11 @@ def login():
 
 @app.route('/login', method='POST', apply=[form_binder_plugin], form=login_form)
 def login():
+    if settings.LOGIN_SUCCESS_URL:
+        login_success_url = settings.LOGIN_SUCCESS_URL
+    else:
+        login_success_url = '/'
+
     form = bottle.request.form
 
     ip = bottle.request.get('REMOTE_ADDR')
@@ -49,7 +54,7 @@ def login():
                                         httponly=True, path='/')
 
             # bottle.redirect('/') //this clears cookies
-            res = bottle.HTTPResponse("", status=302, Location="/")
+            res = bottle.HTTPResponse("", status=302, Location=login_success_url)
             res._cookies = bottle.response._cookies
             return res
 

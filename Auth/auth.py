@@ -204,6 +204,10 @@ class AuthPlugin(object):
     def apply(self, callback, route):
 
         def wrapper(*args, **kwargs):
+            if self.exclude_routes and route.rule in self.exclude_routes:
+                return callback(*args, **kwargs)
+
+
             if bottle.request.get_cookie('token'):
                 authService = AuthService(self.em)
                 
