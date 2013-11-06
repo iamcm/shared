@@ -30,7 +30,7 @@ def login():
 
 @app.route('/login', method='POST', apply=[form_binder_plugin], form=login_form)
 def login():
-    if settings.LOGIN_SUCCESS_URL:
+    if getattr(settings, 'LOGIN_SUCCESS_URL', None):
         login_success_url = settings.LOGIN_SUCCESS_URL
     else:
         login_success_url = '/'

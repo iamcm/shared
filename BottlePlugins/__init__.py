@@ -5,18 +5,17 @@ class ViewdataPlugin(object):
     name = 'viewdata'
     api  = 2
 
-    def __init__(self, vd={}, callback_function=None, bottle_app_reference=None ):
-        self.vd = {}
-        self.vd.update(vd)
+    def __init__(self, callback_function=None, bottle_app_reference=None ):
         self.callback_function = callback_function
 
     def apply(self, callback, route):
-
         def wrapper(*a, **ka):
-            if self.callback_function:
-                self.vd.update(self.callback_function())
+            vd = {}
 
-            bottle.response.viewdata = self.vd
+            if self.callback_function:
+                vd.update(self.callback_function())
+
+            bottle.response.viewdata = vd
             return callback(*a, **ka)
 
         return wrapper
