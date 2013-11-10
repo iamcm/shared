@@ -11,16 +11,18 @@ from Auth.auth import AuthService, User, AuthPlugin, login_form, forgotten_passw
 from datetime import datetime
 from FormBinder import FormBinderPlugin
 from Helpers.emailHelper import Email
+from BottlePlugins import ForceProtocolPlugin
 
 form_binder_plugin = FormBinderPlugin()
 auth_plugin = AuthPlugin(EntityManager())
+force_https_plugin = ForceProtocolPlugin(environment=settings.ENVIRONMENT)
 
 app = bottle.Bottle()
 
 #######################################################
 # Auth routes
 #######################################################
-@app.route('/login')
+@app.route('/login', apply=[force_https_plugin])
 def login():
     viewdata = {
         'form':login_form().get_html(row_class='form-group', submit_btn_class="btn btn-primary", submit_btn_text='Login')
@@ -28,7 +30,7 @@ def login():
     return bottle.template('login.tpl', vd=viewdata)
 
 
-@app.route('/login', method='POST', apply=[form_binder_plugin], form=login_form)
+@app.route('/login', method='POST', apply=[force_https_plugin,form_binder_plugin], form=login_form)
 def login():
     if getattr(settings, 'LOGIN_SUCCESS_URL', None):
         login_success_url = settings.LOGIN_SUCCESS_URL
@@ -69,7 +71,7 @@ def login():
     return bottle.template('login.tpl', vd=viewdata)
 
 
-@app.route('/logout', apply=[auth_plugin])
+@app.route('/logout', apply=[force_https_plugin, auth_plugin])
 def logout():
     a = AuthService(EntityManager())
     a.logout(bottle.request.session)
@@ -78,7 +80,7 @@ def logout():
 
 
 
-@app.route('/forgotten-password', method='GET')
+@app.route('/forgotten-password', apply=[force_https_plugin], method='GET')
 def forgotten_password():
     viewdata = {
         'form':forgotten_password_form().get_html(row_class='form-group', submit_btn_class="btn btn-primary", submit_btn_text='Submit')
@@ -87,7 +89,7 @@ def forgotten_password():
     return bottle.template('forgotten_password', vd=viewdata)
 
 
-@app.route('/forgotten-password', method='POST', apply=[form_binder_plugin], form=forgotten_password_form)
+@app.route('/forgotten-password', method='POST', apply=[force_https_plugin, form_binder_plugin], form=forgotten_password_form)
 def forgotten_password():
     form = bottle.request.form
 
@@ -112,13 +114,13 @@ def forgotten_password():
 
 
 
-@app.route('/forgotten-password-sent', method='GET')
+@app.route('/forgotten-password-sent', apply=[force_https_plugin], method='GET')
 def forgotten_password():
     return bottle.template('forgotten_password_sent', vd={})
 
 
 
-@app.route('/reset-password/:key', method='GET', apply=[form_binder_plugin], form=reset_password_form)
+@app.route('/reset-password/:key', method='GET', apply=[force_https_plugin, form_binder_plugin], form=reset_password_form)
 def index(key):
     form = bottle.request.form
     form.set_value('key', key)
@@ -130,7 +132,7 @@ def index(key):
     return bottle.template('reset_password', vd=viewdata)
 
 
-@app.route('/reset-password/:key', method='POST', apply=[form_binder_plugin], form=reset_password_form)
+@app.route('/reset-password/:key', method='POST', apply=[force_https_plugin, form_binder_plugin], form=reset_password_form)
 def index(key):
     form = bottle.request.form
 
@@ -149,7 +151,7 @@ def index(key):
 
 
 
-@app.route('/reset-password-success', method='GET')
+@app.route('/reset-password-success', apply=[force_https_plugin], method='GET')
 def index():
     return bottle.template('reset_password_success', vd={})
 

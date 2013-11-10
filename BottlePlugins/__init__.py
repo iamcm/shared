@@ -26,20 +26,21 @@ class ForceProtocolPlugin(object):
     name = 'force_protocol'
     api  = 2
 
-    def __init__(self, bottle_app_reference, protocol='HTTPS'):
-        self.bottle = bottle_app_reference
-        self.protocol = protocol
+    def __init__(self, protocol='https', environment='live'):
+        self.protocol = protocol.lower()
+        self.environment = environment.lower()
 
     def apply(self, callback, route):
 
         def wrapper(*a, **ka):
-            if self.protocol.lower() == 'https':
-                if self.bottle.request.environ.get('HTTP_HTTPS') == 'on':
-                    return self.bottle.redirect(self.bottle.request.url.replace('https://','http://'))
+            if self.environment == 'live' or self.environment == 'beta':
+                if self.protocol == 'https':
+                    if bottle.request.environ.get('HTTP_HTTPS') != 'on':
+                        return bottle.redirect(bottle.request.url.replace('http://','https://'))
 
-            elif self.protocol.lower() == 'http':
-                if self.bottle.request.environ.get('HTTP_HTTPS') == 'off':
-                    return self.bottle.redirect(self.bottle.request.url.replace('http://','https://'))
+                elif self.protocol == 'http':
+                    if bottle.request.environ.get('HTTP_HTTPS') != 'off':
+                        return bottle.redirect(bottle.request.url.replace('https://','http://'))
 
             return callback(*a, **ka)
 
