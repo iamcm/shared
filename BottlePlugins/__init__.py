@@ -33,7 +33,7 @@ class ForceProtocolPlugin(object):
     def apply(self, callback, route):
 
         def wrapper(*a, **ka):
-            if self.environment == 'live' or self.environment == 'beta':
+            if self.environment == 'live' or self.environment == 'beta' or self.environment == 'production':
                 if self.protocol == 'https':
                     if bottle.request.environ.get('HTTP_HTTPS') != 'on':
                         return bottle.redirect(bottle.request.url.replace('http://','https://'))
