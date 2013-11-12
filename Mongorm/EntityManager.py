@@ -3,21 +3,21 @@ from decimal import Decimal
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 import models
-from settings import DBHOST, DBPORT, DBNAME, DBDEBUG
+from settings import DBHOST, DBPORT, DBNAME, DBDEBUG, DBUSER, DBPASS
 import Auth.auth
 from Helpers.logger import log_to_file
 from collections import OrderedDict
 
+#only create the mongoclient once here instead of everytime an instance of EntityManager is used
+client = MongoClient(DBHOST, port=DBPORT)
+_DB = client[DBNAME]
+_DB.authenticate(DBUSER, DBPASS)
+
+
 class EntityManager:
 
-    def __init__(self, dbhost=None, dbport=None, dbname=None, dbdebug=False):
-        dbhost = dbhost or DBHOST
-        dbport = dbport or DBPORT
-        dbname = dbname or DBNAME
-        dbdebug = dbdebug or DBDEBUG
-
-        client = MongoClient(dbhost, port=dbport)
-        self.db = client[dbname]
+    def __init__(self, dbdebug=False):
+        self.db = _DB
         self.debug = dbdebug
         
 
