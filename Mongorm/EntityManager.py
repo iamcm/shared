@@ -10,8 +10,9 @@ from collections import OrderedDict
 
 #only create the mongoclient once here instead of everytime an instance of EntityManager is used
 client = MongoClient(DBHOST, port=DBPORT)
-_DB = client[DBNAME]
+_DB = client['admin']
 _DB.authenticate(DBUSER, DBPASS)
+_DB = client[DBNAME]
 
 
 class EntityManager:
