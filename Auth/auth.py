@@ -234,7 +234,9 @@ class AuthPlugin(object):
                 users = self.em.find('User', {'api_key':bottle.request.GET.get('apikey')})
 
                 if len(users)==1:
-                    bottle.request.session = session
+                    s = Session()
+                    s.user_id = users[0]._id
+                    bottle.request.session = s
                     return callback(*args, **kwargs)
                 else:
                     return HTTPError(403, 'Access denied')
