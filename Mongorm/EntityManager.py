@@ -217,7 +217,7 @@ class EntityManager:
         Find all entries for a given collection
         """
         if count:
-            if self.debug: log_to_file("db.%s.find(%s).count()" % (collectionname, objfilter, sort))
+            if self.debug: log_to_file("db.%s.find(%s).count()" % (collectionname, objfilter))
             return self.db[collectionname].find(objfilter).count()
         else:
             if self.debug: log_to_file("db.%s.find(%s, sort=%s)" % (collectionname, objfilter, sort))

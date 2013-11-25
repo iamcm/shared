@@ -134,6 +134,7 @@ class FormItem:
 			return True
 
 	def bind_value(self, value):
+		""" save unescaped and ensure its escaped each time its rendered instead
 		if value and type(value) == str and not self.html:
 			value = html_escape(value.strip())
 		elif value and type(value) == list:
@@ -144,8 +145,14 @@ class FormItem:
 				else:
 					escaped_list.append(i)
 			value = escaped_list
-
+		"""
 		self.value = value
+
+	def _escape_value(self, value):
+		if self.html:
+			return value
+		else:
+			return html_escape(str(value))
 
 	def get_html(self, row_class=None):
 
@@ -161,7 +168,7 @@ class FormItem:
 
 		if self.type == Types.HIDDEN_TYPE:
 			if self.value:
-				valuehtml = 'value="%s"' % self.value
+				valuehtml = 'value="%s"' % self._escape_value(self.value)
 			else:
 				valuehtml = ''
 
@@ -169,7 +176,7 @@ class FormItem:
 
 		elif self.type == Types.TEXT_TYPE or self.type == Types.INT_TYPE:
 			if self.value:
-				valuehtml = 'value="%s"' % self.value
+				valuehtml = 'value="%s"' % self._escape_value(self.value)
 			else:
 				valuehtml = ''
 
@@ -185,7 +192,7 @@ class FormItem:
 
 		elif self.type == Types.TEXTAREA_TYPE:
 			if self.value:
-				valuehtml = self.value
+				valuehtml = self._escape_value(self.value)
 			else:
 				valuehtml = ''
 
@@ -230,7 +237,7 @@ class FormItem:
 				else:
 					valuehtml = ''
 
-				template += '<option value="%s" %s>%s</option>' % (item[0], valuehtml, item[1])
+				template += '<option value="%s" %s>%s</option>' % (item[0], valuehtml, self._escape_value(item[1]))
 
 			template += '</select>'
 
@@ -248,19 +255,22 @@ class FormItem:
 				else:
 					valuehtml = ''
 
-				template += '<option value="%s" %s>%s</option>' % (item[0], valuehtml, item[1])
+				template += '<option value="%s" %s>%s</option>' % (item[0], valuehtml, self._escape_value(item[1]))
 
 			template += '</select>'
 
+
+
 		elif self.type == Types.FILE_TYPE:
 			if self.value:
-				valuehtml = 'value="%s"' % self.value
+				valuehtml = 'value="%s"' % self._escape_value(self.value)
 			else:
 				valuehtml = ''
 
 			if self.label_text and self.id:
 				template += '<label for="%s">%s</label>' % (self.id, self.label_text)
 			template += '<input type="file" name="%s" %s %s %s />' % (self.name, classhtml, idhtml, valuehtml)
+
 
 
 		rowclasshtml = ''
