@@ -15,8 +15,9 @@ except:
 
 #only create the mongoclient once here instead of everytime an instance of EntityManager is used
 client = MongoClient(DBHOST, port=DBPORT)
-_DB = client['admin']
-_DB.authenticate(DBUSER, DBPASS)
+if DBUSER != '' and DBPASS != '':
+    _DB = client['admin']
+    _DB.authenticate(DBUSER, DBPASS)
 _DB = client[DBNAME]
 
 
