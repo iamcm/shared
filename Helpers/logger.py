@@ -1,3 +1,4 @@
+# coding=utf-8
 import sys, traceback
 from datetime import datetime
 import settings

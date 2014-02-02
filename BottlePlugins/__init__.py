@@ -1,3 +1,4 @@
+# coding=utf-8
 import bottle
 from FormBinder import Types
 

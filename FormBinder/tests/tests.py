@@ -1,3 +1,4 @@
+# coding=utf-8
 import unittest
 from FormBinder import FormBuilder, FormItem, Types
 from bottle import html_escape

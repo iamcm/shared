@@ -1,8 +1,10 @@
+# coding=utf-8
 import bottle
 from bottle import html_escape
 
 class Types:
 	HIDDEN_TYPE = "hidden"
+	MULTI_HIDDEN_TYPE = "multihidden"
 	INT_TYPE = "int"
 	TEXT_TYPE = "text"
 	PASSWORD_TYPE = "password"
@@ -61,7 +63,7 @@ class FormBuilder:
 		return len(self.errors) == 0
 
 	def get_html(self, action='', method='post', row_class=None, form_id=None, form_class=None\
-					,submit_btn_class=None, submit_btn_text='Save'):
+					,submit_btn_class=None, submit_btn_text='Save',cancel_btn_class=None, cancel_btn_text='Cancel', cancel_btn_href=None):
 		errorshtml = ''
 
 		idhtml = ''
@@ -76,17 +78,24 @@ class FormBuilder:
 		for item in self.formitems:
 			formhtml += item.get_html(row_class)
 
-
 		submitclasshtml = ''
 		if submit_btn_class:
 			submitclasshtml = 'class="%s"' % submit_btn_class
-
 
 		rowclasshtml = ''
 		if row_class:
 			rowclasshtml = 'class="%s"' % row_class
 
-		formhtml += '<div %s><input type="submit" value="%s" %s /></div>' % (rowclasshtml, submit_btn_text, submitclasshtml)
+		cancel_btn_html = ''
+		if cancel_btn_href:
+			cancelclasshtml = ''
+			if cancel_btn_class:
+				cancelclasshtml = 'class="%s"' % cancel_btn_class
+
+			cancel_btn_html += '<a href="%s" %s>%s</a>' % (cancel_btn_href, cancelclasshtml, cancel_btn_text)
+
+		formhtml += '<div %s><input type="submit" value="%s" %s />%s</div>' % (rowclasshtml, submit_btn_text, submitclasshtml, cancel_btn_html)
+
 		formhtml += '</form>'
 
 		if len(self.errors) > 0 != '':
@@ -100,7 +109,7 @@ class FormBuilder:
 
 
 class FormItem:
-	def __init__(self, type, name, class_name=None, id=None, label_text=None, select_list_items=[], required=False, html=False):
+	def __init__(self, type, name, class_name=None, id=None, label_text=None, select_list_items=[], required=False, html=False, placeholder=None):
 		self.type = type
 		self.name = name
 		self.class_name = class_name
@@ -111,6 +120,7 @@ class FormItem:
 		self.value = None
 		self.error_message = ''
 		self.html = html
+		self.placeholder = placeholder
 
 	def is_valid(self):
 		if self.label_text:
@@ -152,7 +162,10 @@ class FormItem:
 		if self.html:
 			return value
 		else:
-			return html_escape(str(value))
+			if str(type(value)) == "<class 'bson.objectid.ObjectId'>":
+				value = str(value)
+
+			return html_escape(value)
 
 	def get_html(self, row_class=None):
 
@@ -164,6 +177,10 @@ class FormItem:
 		if self.id:
 			idhtml = 'id="%s"' % self.id
 
+		placeholderhtml = ''
+		if self.placeholder:
+			placeholderhtml = 'placeholder="%s"' % self.placeholder
+
 		template = ""
 
 		if self.type == Types.HIDDEN_TYPE:
@@ -174,6 +191,15 @@ class FormItem:
 
 			template += '<input type="hidden" name="%s" %s %s %s />' % (self.name, classhtml, idhtml, valuehtml)
 
+
+		elif self.type == Types.MULTI_HIDDEN_TYPE:
+			if self.select_list_items:
+				for item in self.select_list_items:
+					valuehtml = 'value="%s"' % item[0]
+
+					template += '<input type="hidden" name="%s" %s %s %s />' % (self.name, classhtml, idhtml, valuehtml)
+
+
 		elif self.type == Types.TEXT_TYPE or self.type == Types.INT_TYPE:
 			if self.value:
 				valuehtml = 'value="%s"' % self._escape_value(self.value)
@@ -182,13 +208,15 @@ class FormItem:
 
 			if self.label_text and self.id:
 				template += '<label for="%s">%s</label>' % (self.id, self.label_text)
-			template += '<input type="text" name="%s" %s %s %s />' % (self.name, classhtml, idhtml, valuehtml)
+			template += '<input type="text" name="%s" %s %s %s %s />' % (self.name, classhtml, idhtml, valuehtml, placeholderhtml)
+
 
 		elif self.type == Types.PASSWORD_TYPE:
 
 			if self.label_text and self.id:
 				template += '<label for="%s">%s</label>' % (self.id, self.label_text)
 			template += '<input type="password" name="%s" %s %s />' % (self.name, classhtml, idhtml)
+
 
 		elif self.type == Types.TEXTAREA_TYPE:
 			if self.value:
@@ -198,7 +226,7 @@ class FormItem:
 
 			if self.label_text and self.id:
 				template += '<label for="%s">%s</label>' % (self.id, self.label_text)
-			template += '<textarea name="%s" %s %s>%s</textarea>' % (self.name, classhtml, idhtml, valuehtml)
+			template += '<textarea name="%s" %s %s %s>%s</textarea>' % (self.name, classhtml, idhtml, valuehtml, placeholderhtml)
 
 
 		elif self.type == Types.CHECKBOX_TYPE:
@@ -298,7 +326,7 @@ class FormBinderPlugin(object):
             form = route.config.get('form')()
             for formitem in form.formitems:
                 if bottle.request.params.get(formitem.name):
-                    if formitem.type == Types.MULTI_SELECT_TYPE:
+                    if formitem.type == Types.MULTI_SELECT_TYPE or formitem.type == Types.MULTI_HIDDEN_TYPE:
                         try:
                             formitem.bind_value(bottle.request.params.getall(formitem.name))
                         except:
@@ -312,7 +340,7 @@ class FormBinderPlugin(object):
 
                     else:
                         try:
-                            formitem.bind_value(str(bottle.request.params.get(formitem.name)))
+                            formitem.bind_value(bottle.request.params.get(formitem.name))
                         except:
                             pass
 
