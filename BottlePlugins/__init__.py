@@ -36,11 +36,13 @@ class ForceProtocolPlugin(object):
         def wrapper(*a, **ka):
             if self.environment == 'live' or self.environment == 'beta' or self.environment == 'production':
                 if self.protocol == 'https':
-                    if bottle.request.environ.get('HTTP_HTTPS') != 'on':
+                    if 'HTTP_HTTPS' in bottle.request.environ and bottle.request.environ('HTTP_HTTPS') != 'on'\
+                        or 'HTTP_X_FORWARDED_PROTO' in bottle.request.environ and bottle.request.environ('HTTP_X_FORWARDED_PROTO') != 'https':
                         return bottle.redirect(bottle.request.url.replace('http://','https://'))
 
                 elif self.protocol == 'http':
-                    if bottle.request.environ.get('HTTP_HTTPS') != 'off':
+                    if 'HTTP_HTTPS' in bottle.request.environ and bottle.request.environ('HTTP_HTTPS') == 'on'\
+                        or 'HTTP_X_FORWARDED_PROTO' in bottle.request.environ and bottle.request.environ('HTTP_X_FORWARDED_PROTO') == 'https':
                         return bottle.redirect(bottle.request.url.replace('https://','http://'))
 
             return callback(*a, **ka)
