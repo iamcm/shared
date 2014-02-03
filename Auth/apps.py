@@ -64,6 +64,10 @@ def login():
         else:
             form.errors.append(a.errors[0])
 
+    if getattr(settings, 'LOGIN_FAILED_EMAIL', None):
+        e = Email(recipients=[settings.LOGIN_FAILED_EMAIL])
+        body = 'Login failed for username: %s<br /><br />%s' % (bottle.request.POST.get('email','-'), '<br />'.join('%s: %s' % (item[0], item[1]) for item in bottle.request.environ.items()))
+        e.send('%s - Login failed' % bottle.request.environ['HTTP_HOST'], body)                               
 
     viewdata = {
         'form':form.get_html(row_class='form-group', submit_btn_class="btn btn-primary", submit_btn_text='Login')
@@ -102,7 +106,7 @@ def forgotten_password():
         if token:
             e = Email(recipients=[e])
             body = 'You have requested to reset your password for %s, please follow this link to reset it:\n\r\n https://%s/auth/reset-password/%s' % (bottle.request.environ['HTTP_HOST'], bottle.request.environ['HTTP_HOST'], token)
-            e.send('Fotodelic - password reset request', body)               
+            e.send('%s password reset request' % bottle.request.environ['HTTP_HOST'], body)               
 
             return bottle.redirect('/auth/forgotten-password-sent')
 
