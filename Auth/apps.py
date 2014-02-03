@@ -101,7 +101,7 @@ def forgotten_password():
 
         if token:
             e = Email(recipients=[e])
-            body = 'You have requested to reset your password for www.fotodelic.co.uk, please follow this link to reset it:\n\r\n https://%s/auth/reset-password/%s' % (bottle.request.environ['HTTP_HOST'], token)
+            body = 'You have requested to reset your password for %s, please follow this link to reset it:\n\r\n https://%s/auth/reset-password/%s' % (bottle.request.environ['HTTP_HOST'], bottle.request.environ['HTTP_HOST'], token)
             e.send('Fotodelic - password reset request', body)               
 
             return bottle.redirect('/auth/forgotten-password-sent')
