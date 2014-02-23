@@ -75,9 +75,19 @@ class FormBuilder:
 			formclasshtml = 'class="%s"' % form_class
 
 		formhtml = '<form action="%s" method="%s" %s %s>' % (action, method, idhtml, formclasshtml)
+
+		if len(self.errors) > 0 != '':
+			errorshtml = '<div class="alert alert-danger"><ul>'
+			for error in self.errors:
+				errorshtml += '<li>%s</li>' % error
+			errorshtml += '</ul></div>'
+			self._is_valid = False
+			formhtml += errorshtml
+
+
 		for item in self.formitems:
 			formhtml += item.get_html(row_class)
-
+			
 		submitclasshtml = ''
 		if submit_btn_class:
 			submitclasshtml = 'class="%s"' % submit_btn_class
@@ -98,14 +108,7 @@ class FormBuilder:
 
 		formhtml += '</form>'
 
-		if len(self.errors) > 0 != '':
-			errorshtml = '<div class="alert alert-danger"><ul>'
-			for error in self.errors:
-				errorshtml += '<li>%s</li>' % error
-			errorshtml += '</ul></div>'
-			self._is_valid = False
-
-		return errorshtml + formhtml
+		return formhtml
 
 
 class FormItem:

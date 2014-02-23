@@ -191,14 +191,18 @@ class AuthService:
             return session
 
 
-    def create_user(self, email, password, valid=True):
-        u = User()
+    def create_user(self, email, password, valid=True, user_instance=None):
+        user_type = 'User'
+        u = user_instance if user_instance else User()
+        if user_instance:
+            user_type = self.em._unicode_to_class_name(str(u.__class__))
+            
         u.email = email
         u.salt = ''.join(random.sample(string.letters, 15))
         u.password = self.encrypt_password(password, u.salt)
         u.valid = valid
 
-        self.em.save('User', u)
+        self.em.save(user_type, u)
 
 
 

@@ -2,6 +2,10 @@
 import bottle
 from FormBinder import Types
 
+class AttributeDict(dict): 
+    __getattr__ = dict.__getitem__
+    __setattr__ = dict.__setitem__
+
 class ViewdataPlugin(object):
     name = 'viewdata'
     api  = 2
@@ -11,7 +15,7 @@ class ViewdataPlugin(object):
 
     def apply(self, callback, route):
         def wrapper(*a, **ka):
-            vd = {}
+            vd = AttributeDict()
 
             if self.callback_function:
                 vd.update(self.callback_function())
