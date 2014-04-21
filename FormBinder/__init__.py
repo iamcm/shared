@@ -2,6 +2,15 @@
 import bottle
 from bottle import html_escape
 
+def escape_value(value):
+	if str(type(value)) == "<class 'bson.objectid.ObjectId'>":
+		value = str(value)
+	elif type(value) == str:
+		value = html_escape(value)
+
+	return value
+
+
 class Types:
 	HIDDEN_TYPE = "hidden"
 	MULTI_HIDDEN_TYPE = "multihidden"
@@ -31,7 +40,16 @@ class FormBuilder:
 	def get_value(self, name):
 		for item in self.formitems:
 			if item.name == name:
-				return item.value
+				if item.value and type(item.value) == list:
+					escaped_list = []
+					for i in item.value:
+						escaped_list.append(escape_value(i))
+
+					value = escaped_list
+				else:
+					value = escape_value(item.value)
+				
+				return value
 
 		return None
 
@@ -74,7 +92,12 @@ class FormBuilder:
 		if form_class:
 			formclasshtml = 'class="%s"' % form_class
 
-		formhtml = '<form action="%s" method="%s" %s %s>' % (action, method, idhtml, formclasshtml)
+		enctypehtml = ''
+		for item in self.formitems:
+			if item.type == Types.FILE_TYPE:
+				enctypehtml = ' enctype="multipart/form-data" '
+
+		formhtml = '<form action="%s" method="%s" %s %s %s>' % (action, method, idhtml, formclasshtml, enctypehtml)
 
 		if len(self.errors) > 0 != '':
 			errorshtml = '<div class="alert alert-danger"><ul>'
@@ -161,14 +184,6 @@ class FormItem:
 		"""
 		self.value = value
 
-	def _escape_value(self, value):
-		if self.html:
-			return value
-		else:
-			if str(type(value)) == "<class 'bson.objectid.ObjectId'>":
-				value = str(value)
-
-			return html_escape(value)
 
 	def get_html(self, row_class=None):
 
@@ -188,7 +203,7 @@ class FormItem:
 
 		if self.type == Types.HIDDEN_TYPE:
 			if self.value:
-				valuehtml = 'value="%s"' % self._escape_value(self.value)
+				valuehtml = 'value="%s"' % escape_value(self.value)
 			else:
 				valuehtml = ''
 
@@ -205,7 +220,7 @@ class FormItem:
 
 		elif self.type == Types.TEXT_TYPE or self.type == Types.INT_TYPE:
 			if self.value:
-				valuehtml = 'value="%s"' % self._escape_value(self.value)
+				valuehtml = 'value="%s"' % escape_value(self.value)
 			else:
 				valuehtml = ''
 
@@ -223,13 +238,13 @@ class FormItem:
 
 		elif self.type == Types.TEXTAREA_TYPE:
 			if self.value:
-				valuehtml = self._escape_value(self.value)
+				valuehtml = escape_value(self.value)
 			else:
 				valuehtml = ''
 
 			if self.label_text and self.id:
 				template += '<label for="%s">%s</label>' % (self.id, self.label_text)
-			template += '<textarea name="%s" %s %s %s>%s</textarea>' % (self.name, classhtml, idhtml, valuehtml, placeholderhtml)
+			template += '<textarea name="%s" %s %s>%s</textarea>' % (self.name, classhtml, idhtml, valuehtml)
 
 
 		elif self.type == Types.CHECKBOX_TYPE:
@@ -268,7 +283,7 @@ class FormItem:
 				else:
 					valuehtml = ''
 
-				template += '<option value="%s" %s>%s</option>' % (item[0], valuehtml, self._escape_value(item[1]))
+				template += '<option value="%s" %s>%s</option>' % (item[0], valuehtml, escape_value(item[1]))
 
 			template += '</select>'
 
@@ -286,7 +301,7 @@ class FormItem:
 				else:
 					valuehtml = ''
 
-				template += '<option value="%s" %s>%s</option>' % (item[0], valuehtml, self._escape_value(item[1]))
+				template += '<option value="%s" %s>%s</option>' % (item[0], valuehtml, escape_value(item[1]))
 
 			template += '</select>'
 
@@ -294,7 +309,7 @@ class FormItem:
 
 		elif self.type == Types.FILE_TYPE:
 			if self.value:
-				valuehtml = 'value="%s"' % self._escape_value(self.value)
+				valuehtml = 'value="%s"' % escape_value(self.value)
 			else:
 				valuehtml = ''
 
@@ -315,6 +330,23 @@ class FormItem:
 
 """
 Bottle plugin
+
+usage:
+@app.route('/login', method='POST', apply=[form_binder_plugin], form=login_form)
+def index():
+	form = bottle.request.form
+
+    if form.is_valid():
+        user = User()
+        u = form.hydrate_entity(user)
+
+        .....do stuff and return redirect etc
+    else:
+    	viewdata = {
+	        'form':form.get_html(row_class='form-group', submit_btn_class="btn btn-primary", submit_btn_text='Login')
+	    }
+
+    	return bottle.template('login.tpl', vd=viewdata)
 """
 class FormBinderPlugin(object):
     name = 'form_binder'

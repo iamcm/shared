@@ -292,7 +292,7 @@ class EntityManager:
 
     def save(self, collectionname,  entity):
         """
-        Insert or Update a single entity, set the entity-s _id and return the saved entity
+        Insert or Update a single entity, set the entitys _id and return the saved entity
         """
         #call the pre-save hook
         entity._presave(self)

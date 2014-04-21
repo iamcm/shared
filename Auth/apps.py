@@ -8,7 +8,7 @@ import bottle
 import settings
 from Helpers import logger
 from mongorm.EntityManager import EntityManager
-from Auth.auth import AuthService, User, AuthPlugin, login_form, forgotten_password_form, reset_password_form
+from Auth.auth import AuthService, User, AuthPlugin, login_form, forgotten_password_form, reset_password_form, register_form
 from datetime import datetime
 from FormBinder import FormBinderPlugin
 from Helpers.emailHelper import Email
@@ -22,7 +22,7 @@ app = bottle.Bottle()
 
 #######################################################
 # Auth routes
-#######################################################
+#######################################################   
 @app.route('/login', apply=[force_https_plugin])
 def login():
     viewdata = {
@@ -161,7 +161,42 @@ def index():
     return bottle.template('reset_password_success', vd={})
 
 
+@app.route('/register', apply=[force_https_plugin])
+def register():
+    viewdata = {
+        'form':register_form().get_html(row_class='form-group', submit_btn_class="btn btn-primary", submit_btn_text='Register')
+    }
+    return bottle.template('register.tpl', vd=viewdata)
 
+
+@app.route('/register', method='POST', apply=[force_https_plugin,form_binder_plugin], form=register_form)
+def register():
+    form = bottle.request.form
+
+    if form.is_valid():
+        em = EntityManager()
+        auth_service = AuthService(em)
+
+        user = auth_service.create_user(form.get_value('email'), form.get_value('password'), form.get_value('username'),True)
+
+        em.save('User', user)
+
+        if getattr(settings, 'REGISTER_SUCCESS_URL', None):
+            url = settings.REGISTER_SUCCESS_URL
+        else:
+            url = '/'
+
+        return bottle.redirect(url)
+
+    viewdata = {
+        'form':form.get_html(row_class='form-group', submit_btn_class="btn btn-primary", submit_btn_text='Register')
+    }
+    return bottle.template('register.tpl', vd=viewdata)
+
+
+@app.route('/register-complete', apply=[force_https_plugin])
+def register():
+    return bottle.template('register_complete.tpl')
 
 
 
