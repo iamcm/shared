@@ -82,7 +82,7 @@ class EntityManager:
         return entity
 
 
-    def _entity_to_dict(self, entity, saveChildEntities=False):
+    def _entity_to_dict(self, entity, saveChildEntities=True):
         """
         Convert an entity class to a dict in order to persist it to the database
         Note we cant just call entity.__dict__ because we want to find any entity 
@@ -301,7 +301,7 @@ class EntityManager:
         if hasattr(entity, '_id'):
             setattr(entity, '_id', ObjectId(entity._id))
 
-        obj = self._entity_to_dict(entity, True)
+        obj = self._entity_to_dict(entity)
 
         if self.debug: log_to_file("db.%s.save(%s)" % (collectionname, obj))
 
