@@ -26,7 +26,7 @@ app = bottle.Bottle()
 @app.route('/login', apply=[force_https_plugin])
 def login():
     viewdata = {
-        'form':login_form().get_html(row_class='form-group', submit_btn_class="btn btn-primary", submit_btn_text='Login')
+        'form':login_form().get_html(form_class='', row_class='form-group', submit_btn_class="btn btn-primary", submit_btn_text='Login', submit_container_class='')
     }
     return bottle.template('login.tpl', vd=viewdata)
 
@@ -70,7 +70,7 @@ def login():
         e.send('%s - Login failed' % bottle.request.environ['HTTP_HOST'], body)                               
 
     viewdata = {
-        'form':form.get_html(row_class='form-group', submit_btn_class="btn btn-primary", submit_btn_text='Login')
+        'form':form.get_html(row_class='form-group', submit_btn_class="btn btn-primary", submit_btn_text='Login', submit_container_class='')
     }
 
     return bottle.template('login.tpl', vd=viewdata)
@@ -88,7 +88,7 @@ def logout():
 @app.route('/forgotten-password', apply=[force_https_plugin], method='GET')
 def forgotten_password():
     viewdata = {
-        'form':forgotten_password_form().get_html(row_class='form-group', submit_btn_class="btn btn-primary", submit_btn_text='Submit')
+        'form':forgotten_password_form().get_html(row_class='form-group', submit_btn_class="btn btn-primary", submit_btn_text='Submit', submit_container_class='')
     }
 
     return bottle.template('forgotten_password', vd=viewdata)
@@ -114,7 +114,7 @@ def forgotten_password():
             form.errors.append(a.errors[0])
 
     return bottle.template('forgotten_password', vd={
-            'form':form.get_html(row_class='form-group', submit_btn_class="btn btn-primary", submit_btn_text='Submit')
+            'form':form.get_html(row_class='form-group', submit_btn_class="btn btn-primary", submit_btn_text='Submit', submit_container_class='')
         })
 
 
@@ -151,7 +151,7 @@ def index(key):
 
     
     return bottle.template('reset_password', vd={
-        'form':form.get_html(row_class='form-group', submit_btn_class="btn btn-primary", submit_btn_text='Submit')
+        'form':form.get_html(row_class='form-group', submit_btn_class="btn btn-primary", submit_btn_text='Submit', submit_container_class='')
     })
 
 
@@ -164,7 +164,7 @@ def index():
 @app.route('/register', apply=[force_https_plugin])
 def register():
     viewdata = {
-        'form':register_form().get_html(row_class='form-group', submit_btn_class="btn btn-primary", submit_btn_text='Register')
+        'form':register_form().get_html(row_class='form-group', submit_btn_class="btn btn-primary", submit_btn_text='Register', submit_container_class='')
     }
     return bottle.template('register.tpl', vd=viewdata)
 
@@ -189,7 +189,7 @@ def register():
         return bottle.redirect(url)
 
     viewdata = {
-        'form':form.get_html(row_class='form-group', submit_btn_class="btn btn-primary", submit_btn_text='Register')
+        'form':form.get_html(row_class='form-group', submit_btn_class="btn btn-primary", submit_btn_text='Register', submit_container_class='')
     }
     return bottle.template('register.tpl', vd=viewdata)
 

@@ -270,7 +270,7 @@ class AuthPlugin(object):
 
 def forgotten_password_form():
     formitems = []
-    formitems.append(FormItem(Types.TEXT_TYPE, 'email', id='email', label_text='Email', class_name="form-control", required=True))
+    formitems.append(FormItem(Types.TEXT_TYPE, 'email', id='email', label_text='Email', class_name="form-control", required=True, label_class='control-label', input_container_class=''))
 
     return FormBuilder(formitems)
 
@@ -278,8 +278,8 @@ def forgotten_password_form():
 def reset_password_form():
     formitems = []
     formitems.append(FormItem(Types.HIDDEN_TYPE, 'key', required=True))
-    formitems.append(FormItem(Types.PASSWORD_TYPE, 'password', id='password', label_text='Password', class_name="form-control", required=True))
-    formitems.append(FormItem(Types.PASSWORD_TYPE, 'passwordconf', id='passwordconf', label_text='Confirm Password', class_name="form-control", required=True))
+    formitems.append(FormItem(Types.PASSWORD_TYPE, 'password', id='password', label_text='Password', class_name="form-control", required=True, label_class='control-label', input_container_class=''))
+    formitems.append(FormItem(Types.PASSWORD_TYPE, 'passwordconf', id='passwordconf', label_text='Confirm Password', class_name="form-control", required=True, label_class='control-label', input_container_class=''))
 
     return FormBuilder(formitems, validator=reset_password_validation)
 
@@ -293,19 +293,19 @@ def reset_password_validation(form):
 
 def login_form():
     formitems = []
-    formitems.append(FormItem(Types.TEXT_TYPE, 'email', id='email', label_text='Email', class_name="form-control", required=True))
-    formitems.append(FormItem(Types.PASSWORD_TYPE, 'password', id='password', label_text='Password', class_name="form-control", required=True))
+    formitems.append(FormItem(Types.TEXT_TYPE, 'email', id='email', label_text='Email', class_name="form-control", required=True, label_class='control-label', input_container_class=''))
+    formitems.append(FormItem(Types.PASSWORD_TYPE, 'password', id='password', label_text='Password', class_name="form-control", required=True, label_class='control-label', input_container_class=''))
 
     return FormBuilder(formitems)
 
 
 def register_form():
     formitems = []
-    formitems.append(FormItem(Types.TEXT_TYPE, 'email', id='email', label_text='Email', class_name="form-control", required=True))
+    formitems.append(FormItem(Types.TEXT_TYPE, 'email', id='email', label_text='Email', class_name="form-control", required=True, label_class='control-label', input_container_class=''))
     if getattr(settings, 'AUTH_USER_HAS_USERNAME', None):
-        formitems.append(FormItem(Types.TEXT_TYPE, 'username', id='username', label_text='Username (visible to other users)', class_name="form-control", required=True))
-    formitems.append(FormItem(Types.PASSWORD_TYPE, 'password', id='password', label_text='Password', class_name="form-control", required=True))
-    formitems.append(FormItem(Types.PASSWORD_TYPE, 'passwordconf', id='passwordconf', label_text='Confirm Password', class_name="form-control", required=True))
+        formitems.append(FormItem(Types.TEXT_TYPE, 'username', id='username', label_text='Username (visible to other users)', class_name="form-control", required=True, label_class='control-label', input_container_class=''))
+    formitems.append(FormItem(Types.PASSWORD_TYPE, 'password', id='password', label_text='Password', class_name="form-control", required=True, label_class='control-label', input_container_class=''))
+    formitems.append(FormItem(Types.PASSWORD_TYPE, 'passwordconf', id='passwordconf', label_text='Confirm Password', class_name="form-control", required=True, label_class='control-label', input_container_class=''))
 
     return FormBuilder(formitems, validator=reset_password_validation)
 

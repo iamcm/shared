@@ -81,7 +81,7 @@ class FormBuilder:
 		return len(self.errors) == 0
 
 	def get_html(self, action='', method='post', row_class=None, form_id=None, form_class=None\
-					,submit_btn_class=None, submit_btn_text='Save',cancel_btn_class=None, cancel_btn_text='Cancel', cancel_btn_href=None):
+					,submit_btn_class=None, submit_btn_text='Save',cancel_btn_class=None, cancel_btn_text='Cancel', cancel_btn_href=None, submit_container_class='col-sm-offset-2 col-sm-2'):
 		errorshtml = ''
 
 		idhtml = ''
@@ -127,7 +127,11 @@ class FormBuilder:
 
 			cancel_btn_html += '<a href="%s" %s>%s</a>' % (cancel_btn_href, cancelclasshtml, cancel_btn_text)
 
-		formhtml += '<div %s><input type="submit" value="%s" %s />%s</div>' % (rowclasshtml, submit_btn_text, submitclasshtml, cancel_btn_html)
+		submitcontainerclasshtml = ''
+		if submit_container_class:
+			submitcontainerclasshtml = 'class="%s"' % submit_container_class
+
+		formhtml += '<div %s><div %s><input type="submit" value="%s" %s />%s</div></div>' % (rowclasshtml, submitcontainerclasshtml, submit_btn_text, submitclasshtml, cancel_btn_html)
 
 		formhtml += '</form>'
 
@@ -135,7 +139,7 @@ class FormBuilder:
 
 
 class FormItem:
-	def __init__(self, type, name, class_name=None, id=None, label_text=None, select_list_items=[], required=False, html=False, placeholder=None):
+	def __init__(self, type, name, class_name='form-control', id=None, label_text=None, select_list_items=[], required=False, html=False, placeholder=None, label_class='control-label col-sm-2', input_container_class='col-sm-10'):
 		self.type = type
 		self.name = name
 		self.class_name = class_name
@@ -147,6 +151,8 @@ class FormItem:
 		self.error_message = ''
 		self.html = html
 		self.placeholder = placeholder
+		self.label_class = label_class
+		self.input_container_class = input_container_class
 
 	def is_valid(self):
 		if self.label_text:
@@ -199,6 +205,14 @@ class FormItem:
 		if self.placeholder:
 			placeholderhtml = 'placeholder="%s"' % self.placeholder
 
+		labelclasshtml = ''
+		if self.label_class:
+			labelclasshtml = 'class="%s"' % self.label_class
+
+		inputcontainerclasshtml = ''
+		if self.input_container_class:
+			inputcontainerclasshtml = 'class="%s"' % self.input_container_class
+
 		template = ""
 
 		if self.type == Types.HIDDEN_TYPE:
@@ -225,15 +239,15 @@ class FormItem:
 				valuehtml = ''
 
 			if self.label_text and self.id:
-				template += '<label for="%s">%s</label>' % (self.id, self.label_text)
-			template += '<input type="text" name="%s" %s %s %s %s />' % (self.name, classhtml, idhtml, valuehtml, placeholderhtml)
+				template += '<label %s for="%s">%s</label>' % (labelclasshtml, self.id, self.label_text)
+			template += '<div %s><input type="text" name="%s" %s %s %s %s /></div>' % (inputcontainerclasshtml, self.name, classhtml, idhtml, valuehtml, placeholderhtml)
 
 
 		elif self.type == Types.PASSWORD_TYPE:
 
 			if self.label_text and self.id:
-				template += '<label for="%s">%s</label>' % (self.id, self.label_text)
-			template += '<input type="password" name="%s" %s %s />' % (self.name, classhtml, idhtml)
+				template += '<label %s for="%s">%s</label>' % (labelclasshtml, self.id, self.label_text)
+			template += '<div %s><input type="password" name="%s" %s %s /></div>' % (inputcontainerclasshtml, self.name, classhtml, idhtml)
 
 
 		elif self.type == Types.TEXTAREA_TYPE:
@@ -243,8 +257,8 @@ class FormItem:
 				valuehtml = ''
 
 			if self.label_text and self.id:
-				template += '<label for="%s">%s</label>' % (self.id, self.label_text)
-			template += '<textarea name="%s" %s %s>%s</textarea>' % (self.name, classhtml, idhtml, valuehtml)
+				template += '<label %s for="%s">%s</label>' % (labelclasshtml, self.id, self.label_text)
+			template += '<div %s><textarea name="%s" %s %s>%s</textarea></div>' % (inputcontainerclasshtml, self.name, classhtml, idhtml, valuehtml)
 
 
 		elif self.type == Types.CHECKBOX_TYPE:
@@ -254,8 +268,8 @@ class FormItem:
 				valuehtml = ''
 
 			if self.label_text and self.id:
-				template += '<label for="%s">%s</label>' % (self.id, self.label_text)
-			template += '<input type="checkbox" name="%s" %s %s %s />' % (self.name, classhtml, idhtml, valuehtml)
+				template += '<label %s for="%s">%s</label>' % (labelclasshtml, self.id, self.label_text)
+			template += '<div %s><input type="checkbox" name="%s" %s %s %s /></div>' % (inputcontainerclasshtml, self.name, classhtml, idhtml, valuehtml)
 
 
 
@@ -266,16 +280,16 @@ class FormItem:
 				valuehtml = ''
 
 			if self.label_text and self.id:
-				template += '<label for="%s">%s</label>' % (self.id, self.label_text)
-			template += '<input type="radio" name="%s" %s %s %s />' % (self.name, classhtml, idhtml, valuehtml)
+				template += '<label %s for="%s">%s</label>' % (labelclasshtml, self.id, self.label_text)
+			template += '<div %s><input type="radio" name="%s" %s %s %s /></div>' % (inputcontainerclasshtml, self.name, classhtml, idhtml, valuehtml)
 
 
 
 		elif self.type == Types.SELECT_TYPE:
 			if self.label_text and self.id:
-				template += '<label for="%s">%s</label>' % (self.id, self.label_text)
+				template += '<label %s for="%s">%s</label>' % (labelclasshtml, self.id, self.label_text)
 				
-			template += '<select name="%s" %s %s>' % (self.name, classhtml, idhtml)
+			template += '<div %s><select name="%s" %s %s>' % (inputcontainerclasshtml, self.name, classhtml, idhtml)
 
 			for item in self.select_list_items:
 				if self.value and str(self.value) == str(item[0]):
@@ -285,15 +299,15 @@ class FormItem:
 
 				template += '<option value="%s" %s>%s</option>' % (item[0], valuehtml, escape_value(item[1]))
 
-			template += '</select>'
+			template += '</select></div>'
 
 
 
 		elif self.type == Types.MULTI_SELECT_TYPE:
 			if self.label_text and self.id:
-				template += '<label for="%s">%s</label>' % (self.id, self.label_text)
+				template += '<label %s for="%s">%s</label>' % (labelclasshtml, self.id, self.label_text)
 				
-			template += '<select name="%s" %s %s multiple>' % (self.name, classhtml, idhtml)
+			template += '<div %s><select name="%s" %s %s multiple>' % (inputcontainerclasshtml, self.name, classhtml, idhtml)
 
 			for item in self.select_list_items:
 				if self.value and len([v for v in self.value if str(v)==str(item[0])]) > 0:
@@ -303,7 +317,7 @@ class FormItem:
 
 				template += '<option value="%s" %s>%s</option>' % (item[0], valuehtml, escape_value(item[1]))
 
-			template += '</select>'
+			template += '</select></div>'
 
 
 
@@ -314,8 +328,8 @@ class FormItem:
 				valuehtml = ''
 
 			if self.label_text and self.id:
-				template += '<label for="%s">%s</label>' % (self.id, self.label_text)
-			template += '<input type="file" name="%s" %s %s %s />' % (self.name, classhtml, idhtml, valuehtml)
+				template += '<label %s for="%s">%s</label>' % (labelclasshtml, self.id, self.label_text)
+			template += '<div %s><input type="file" name="%s" %s %s %s /></div>' % (inputcontainerclasshtml, self.name, classhtml, idhtml, valuehtml)
 
 
 
