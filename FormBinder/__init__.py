@@ -69,7 +69,6 @@ class FormBuilder:
 
 
 	def is_valid(self):
-		self.errors = []
 		for item in self.formitems:
 			if not item.is_valid():
 				if item.error_message not in self.errors:

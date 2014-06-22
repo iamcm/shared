@@ -172,9 +172,19 @@ def register():
 @app.route('/register', method='POST', apply=[force_https_plugin,form_binder_plugin], form=register_form)
 def register():
     form = bottle.request.form
+    em = EntityManager()
+
+    #check email
+    if len(em.find('User',{'email':form.get_value('email')})) > 0:
+        form.errors.append('The Email is already in use on this site, please select a different one')
+
+    #check username
+    if len(em.find('User',{'username':form.get_value('username')})) > 0:
+        form.errors.append('The Username is already in use on this site, please select a different one')
+
+    print form.errors
 
     if form.is_valid():
-        em = EntityManager()
         auth_service = AuthService(em)
 
         user = auth_service.create_user(form.get_value('email'), form.get_value('password'), form.get_value('username'),True)
