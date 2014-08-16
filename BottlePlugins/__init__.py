@@ -93,9 +93,6 @@ class SessionDataPlugin(object):
                 enc = c.encrypt(json.dumps(bottle.request.session_data))
                 bottle.response.set_cookie(self.name, enc, path='/')
 
-
-            print bottle.request.session_data
-
             return body
 
         return wrapper
