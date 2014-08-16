@@ -3,7 +3,7 @@ from distutils.core import setup
 
 setup(
     name='mongorm',
-    version='0.1.2',
+    version='0.1.3',
     author='Chris Mitchell',
     author_email='milchardo@hotmail.co.uk',
     license='LICENSE.txt',

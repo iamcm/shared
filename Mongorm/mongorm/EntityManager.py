@@ -111,11 +111,12 @@ class EntityManager:
 
                         for item in propvalue:
                             #if the items in this list are entities then convert them to an object as well
-                            if hasattr(item, '_presave') and saveChildEntities:
-                                #save the entity
-                                item = self.save(self._unicode_to_class_name(str(item.__class__)), item)
+                            if hasattr(item, '_presave'):
+                                if saveChildEntities:
+                                    #save the entity
+                                    item = self.save(self._unicode_to_class_name(str(item.__class__)), item)
                                 #convert this entity
-                                item = self._entity_to_dict(item)
+                                item = self._entity_to_dict(item, saveChildEntities)
                             
                             #add this item to the list of processed items
                             items.append(item)
@@ -124,11 +125,12 @@ class EntityManager:
                         propvalue = items
 
                     #eg User.role = <UserRoleEntity>
-                    elif hasattr(propvalue, '_presave') and saveChildEntities:
-                        #save the entity
-                        propvalue = self.save(self._unicode_to_class_name(str(propvalue.__class__)), propvalue)
+                    elif hasattr(propvalue, '_presave'):
+                        if saveChildEntities:
+                            #save the entity
+                            propvalue = self.save(self._unicode_to_class_name(str(propvalue.__class__)), propvalue)
                         #convert this entity
-                        propvalue = self._entity_to_dict(propvalue)
+                        propvalue = self._entity_to_dict(propvalue, saveChildEntities)
 
                 obj[prop] = propvalue
 

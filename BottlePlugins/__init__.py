@@ -1,6 +1,12 @@
 # coding=utf-8
+import json
 import bottle
+import random
+import datetime
+import calendar
+import string
 from FormBinder import Types
+from Helpers import aes
 
 class AttributeDict(dict): 
     __getattr__ = dict.__getitem__
@@ -50,5 +56,46 @@ class ForceProtocolPlugin(object):
                         return bottle.redirect(bottle.request.url.replace('https://','http://'))
 
             return callback(*a, **ka)
+
+        return wrapper
+
+
+
+class SessionDataPlugin(object):
+    name = 'session_data'
+    api  = 2
+
+    def __init__(self, name='sc'):
+        self.name = name
+
+    def apply(self, callback, route):
+
+        def wrapper(*a, **ka):
+            #decrypt after request
+            if self.name in bottle.request.cookies.keys():
+                value = bottle.request.get_cookie(self.name)
+                c = aes.Cipher()
+                try:
+                    bottle.request.session_data = json.loads(c.decrypt(value))
+                except ValueError:
+                    pass
+            else:
+                timestamp = str(calendar.timegm(datetime.datetime.now().timetuple()))
+                randomstring = ''.join(random.sample(string.letters + string.digits, 32))
+                combinedid = timestamp + randomstring
+                bottle.request.session_data = {'_id':combinedid}
+
+            body = callback(*a, **ka)
+
+            #encrypt before response
+            if bottle.request.session_data is not None:
+                c = aes.Cipher()
+                enc = c.encrypt(json.dumps(bottle.request.session_data))
+                bottle.response.set_cookie(self.name, enc, path='/')
+
+
+            print bottle.request.session_data
+
+            return body
 
         return wrapper
