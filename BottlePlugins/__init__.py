@@ -71,7 +71,7 @@ class ForceWWWPlugin(object):
     def apply(self, callback, route):
 
         def wrapper(*a, **ka):
-            if 1==1 or self.environment == 'live' or self.environment == 'beta' or self.environment == 'production':
+            if self.environment == 'live' or self.environment == 'beta' or self.environment == 'production':
                 if 'www.' not in bottle.request.url:
                         return bottle.redirect(bottle.request.url.replace('://','://www.'))
 
