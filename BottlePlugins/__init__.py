@@ -61,6 +61,26 @@ class ForceProtocolPlugin(object):
 
 
 
+class ForceWWWPlugin(object):
+    name = 'force_www'
+    api  = 2
+
+    def __init__(self, environment='live'):
+        self.environment = environment.lower()
+
+    def apply(self, callback, route):
+
+        def wrapper(*a, **ka):
+            if 1==1 or self.environment == 'live' or self.environment == 'beta' or self.environment == 'production':
+                if 'www.' not in bottle.request.url:
+                        return bottle.redirect(bottle.request.url.replace('://','://www.'))
+
+            return callback(*a, **ka)
+
+        return wrapper
+
+
+
 class SessionDataPlugin(object):
     name = 'session_data'
     api  = 2
