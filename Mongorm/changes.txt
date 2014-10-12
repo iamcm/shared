@@ -1,1 +1,2 @@
 v0.1.0, 2013-12-01 -- Initial release.
+v0.2.0, 2014-10-26 -- Update EntityManager to put $maxdistance parameter inside $near document for geospacial queries to satisfy mongodb 2.6 release http://docs.mongodb.org/master/release-notes/2.6-compatibility/#maxdistance-changes

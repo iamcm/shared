@@ -447,15 +447,12 @@ class EntityManager:
                                         '$geometry' :
                                         { 
                                             'type' : "Point" ,
-                                            'coordinates' : coords 
-                                        } 
+                                            'coordinates' : coords ,
+                                        }
+                                        ,'$maxDistance':maxDistance
                                     }
                                 })
-        #mongodb requires $near to be the first item in the dict, so we need to 
-        #use an OrderedDict and add $maxDistance after $near in order to 
-        #use it
-        criteria.update({'$maxDistance':maxDistance})
-
+        
         criteria = { field : criteria}
 
         items = []
