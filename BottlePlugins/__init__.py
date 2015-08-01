@@ -46,13 +46,11 @@ class ForceProtocolPlugin(object):
         def wrapper(*a, **ka):
             if self.environment == 'live' or self.environment == 'beta' or self.environment == 'production':
                 if self.protocol == 'https':
-                    if 'HTTP_HTTPS' in bottle.request.environ.keys() and bottle.request.environ.get('HTTP_HTTPS') != 'on' and bottle.request.environ.get('HTTP_HTTPS') != '1'\
-                        or 'HTTP_X_FORWARDED_PROTO' in bottle.request.environ.keys() and bottle.request.environ.get('HTTP_X_FORWARDED_PROTO') != 'https':
+                    if 'HTTP_X_FORWARDED_PROTO' in bottle.request.environ.keys() and bottle.request.environ.get('HTTP_X_FORWARDED_PROTO') != 'https':
                         return bottle.redirect(bottle.request.url.replace('http://','https://'))
 
                 elif self.protocol == 'http':
-                    if 'HTTP_HTTPS' in bottle.request.environ.keys() and (bottle.request.environ.get('HTTP_HTTPS') == 'on' or bottle.request.environ.get('HTTP_HTTPS') == '1')\
-                        or 'HTTP_X_FORWARDED_PROTO' in bottle.request.environ.keys() and bottle.request.environ.get('HTTP_X_FORWARDED_PROTO') == 'https':
+                    if 'HTTP_X_FORWARDED_PROTO' in bottle.request.environ.keys() and bottle.request.environ.get('HTTP_X_FORWARDED_PROTO') == 'https':
                         return bottle.redirect(bottle.request.url.replace('https://','http://'))
 
             return callback(*a, **ka)
